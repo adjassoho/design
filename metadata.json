@@ -1,0 +1,7 @@
+{
+  "name": "Transition to Glory - Memorial & Celebration of Life",
+  "description": "An elegant digital memorial program, tribute book, and order of service with dynamic image links, candle lighting, hymns, and customizer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
