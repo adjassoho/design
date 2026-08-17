@@ -31,13 +31,20 @@ export const ScreenShare: React.FC<ScreenShareProps> = ({ memorial, onOpenPaymen
       ? window.location.origin + window.location.pathname
       : 'https://convive-obseques.app';
 
-  const dynamicParams = new URLSearchParams({
+  const paramsObj: Record<string, string> = {
     name: memorial.fullName,
     age: String(memorial.age),
     birth: memorial.birthYear,
     pass: memorial.passingYear,
     theme: memorial.themeColor,
-  }).toString();
+  };
+
+  // If photo is an HTTPS/HTTP URL or reasonably sized, include it in share link
+  if (memorial.portraitUrl && (memorial.portraitUrl.startsWith('http://') || memorial.portraitUrl.startsWith('https://'))) {
+    paramsObj.photo = memorial.portraitUrl;
+  }
+
+  const dynamicParams = new URLSearchParams(paramsObj).toString();
 
   const shareableDynamicUrl = `${currentUrl}?${dynamicParams}`;
 

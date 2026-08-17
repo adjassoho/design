@@ -34,6 +34,7 @@ import {
   stopMemorialAudio,
   startMemorialAudio,
 } from './utils/audioChime';
+import { updateDynamicFaviconAndMeta } from './utils/dynamicFavicon';
 import confetti from 'canvas-confetti';
 
 export default function App() {
@@ -99,6 +100,11 @@ export default function App() {
   const [isCollectiveGuest, setIsCollectiveGuest] = useState(false);
   const [hasBrokenSeal, setHasBrokenSeal] = useState(true); // default true for organizer preview
   const [isGuestMode, setIsGuestMode] = useState(false);
+
+  // Dynamically update Favicon with uploaded photo and Page title to Faire-part
+  useEffect(() => {
+    updateDynamicFaviconAndMeta(memorial.portraitUrl, memorial.fullName);
+  }, [memorial.portraitUrl, memorial.fullName]);
 
   // Auto-save to localStorage
   useEffect(() => {

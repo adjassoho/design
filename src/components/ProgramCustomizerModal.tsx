@@ -88,6 +88,8 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
     onClose();
   };
 
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
   const handleLanguageChange = (lang: 'fr' | 'en') => {
     if (lang === 'en') {
       setFormData((prev) => ({
@@ -133,13 +135,46 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setIsUploadingPhoto(true);
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         if (event.target?.result) {
+          const base64 = event.target.result as string;
+          // Set preview immediately for fast user feedback
           setFormData((prev) => ({
             ...prev,
-            portraitUrl: event.target!.result as string,
+            portraitUrl: base64,
           }));
+
+          // Upload to server to get a real public URL for WhatsApp vignette previews
+          try {
+            const res = await fetch('/api/upload-portrait', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                imageBase64: base64,
+                mimeType: file.type || 'image/jpeg',
+              }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.fullUrl || data.url) {
+                const finalUrl =
+                  data.fullUrl ||
+                  (typeof window !== 'undefined'
+                    ? `${window.location.origin}${data.url}`
+                    : data.url);
+                setFormData((prev) => ({
+                  ...prev,
+                  portraitUrl: finalUrl,
+                }));
+              }
+            }
+          } catch (err) {
+            console.warn('Fallback: image conservée localement', err);
+          } finally {
+            setIsUploadingPhoto(false);
+          }
         }
       };
       reader.readAsDataURL(file);
@@ -513,12 +548,19 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                 </h4>
 
                 <div className="flex items-center gap-3">
-                  <img
-                    src={formData.portraitUrl}
-                    alt="Portrait Preview"
-                    className="w-14 h-14 rounded-xl object-cover border border-amber-400 shadow shrink-0"
-                    referrerPolicy="no-referrer"
-                  />
+                  <div className="relative">
+                    <img
+                      src={formData.portraitUrl}
+                      alt="Portrait Preview"
+                      className="w-14 h-14 rounded-xl object-cover border border-amber-400 shadow shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    {isUploadingPhoto && (
+                      <div className="absolute inset-0 bg-black/70 rounded-xl flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
                   <div className="flex-1 space-y-1.5">
                     <input
                       type="url"
@@ -529,7 +571,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     />
                     <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded-xl text-neutral-200 cursor-pointer font-medium text-[11px] border border-neutral-700">
                       <Upload className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Uploader depuis votre téléphone ou ordinateur</span>
+                      <span>{isUploadingPhoto ? 'Génération de la vignette...' : 'Uploader depuis téléphone ou PC'}</span>
                       <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
                     </label>
                   </div>
