@@ -1,24 +1,27 @@
 import React, { useState } from 'react';
 import { MemorialProfile } from '../types';
 import { waxSealDefault } from '../data/defaultMemorial';
-import { ChevronLeft, Share2, Download, RotateCw, MapPin, Sparkles } from 'lucide-react';
+import { ChevronLeft, Share2, RotateCw, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ScreenMemorialCardProps {
   memorial: MemorialProfile;
   onBack: () => void;
-  onShare: () => void;
+  onShare?: () => void;
+  isGuestMode?: boolean;
 }
 
 export const ScreenMemorialCard: React.FC<ScreenMemorialCardProps> = ({
   memorial,
   onBack,
   onShare,
+  isGuestMode = false,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const isEn = memorial.language === 'en';
 
   return (
-    <div className="relative w-full h-full min-h-[720px] flex flex-col justify-between overflow-y-auto overflow-x-hidden select-none bg-neutral-950">
+    <div className="relative w-full flex-1 flex flex-col justify-between overflow-x-hidden select-none bg-neutral-950 pb-6">
       {/* Background Heavenly Clouds */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <img
@@ -35,35 +38,39 @@ export const ScreenMemorialCard: React.FC<ScreenMemorialCardProps> = ({
       <header className="relative z-20 pt-2 px-4 flex items-center justify-between">
         <button
           onClick={onBack}
-          className="flex items-center space-x-1 text-[#6D1B28] font-bold text-sm sm:text-base hover:text-amber-900 transition-colors py-1 px-2 rounded-lg bg-amber-100/60 backdrop-blur-xs shadow-xs"
+          className="flex items-center space-x-1 text-[#6D1B28] font-bold text-xs sm:text-sm hover:text-amber-900 transition-colors py-1 px-2.5 rounded-lg bg-amber-100/80 backdrop-blur-xs shadow-xs cursor-pointer"
         >
-          <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
-          <span className="font-sans-custom font-semibold">Memorial</span>
+          <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+          <span className="font-sans-custom font-semibold">{isEn ? 'Program' : 'Programme'}</span>
         </button>
 
         <div className="flex items-center space-x-1.5">
           <button
             onClick={() => setIsFlipped(!isFlipped)}
-            className="p-1.5 rounded-lg bg-white/70 backdrop-blur-xs text-[#6D1B28] hover:bg-white transition-all shadow-xs flex items-center gap-1 text-xs font-semibold"
-            title="Flip to view memorial scripture"
+            className="p-1.5 px-2.5 rounded-lg bg-white/80 backdrop-blur-xs text-[#6D1B28] hover:bg-white transition-all shadow-xs flex items-center gap-1 text-xs font-semibold cursor-pointer"
+            title={isEn ? 'Flip to view scripture' : 'Retourner pour lire le verset'}
           >
             <RotateCw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Flip Verse</span>
+            <span>{isEn ? 'Flip' : 'Verset'}</span>
           </button>
-          <button
-            onClick={onShare}
-            className="p-1.5 rounded-lg bg-[#6D1B28] text-amber-100 hover:bg-[#852333] transition-all shadow-xs flex items-center gap-1 text-xs font-semibold"
-            title="Share Memorial Card"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Share</span>
-          </button>
+
+          {/* Share button ONLY visible for organizer, hidden for guest */}
+          {!isGuestMode && onShare && (
+            <button
+              onClick={onShare}
+              className="p-1.5 px-2.5 rounded-lg bg-[#6D1B28] text-amber-100 hover:bg-[#852333] transition-all shadow-xs flex items-center gap-1 text-xs font-semibold cursor-pointer"
+              title="Partager le faire-part"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>{isEn ? 'Share' : 'Partager'}</span>
+            </button>
+          )}
         </div>
       </header>
 
       {/* Main Content Area */}
       <div className="relative z-10 flex-1 flex flex-col md:flex-row items-center justify-center p-3 gap-3">
-        {/* Left Side Portrait (Prominent in Image 2) */}
+        {/* Left Side Portrait */}
         <div className="relative w-full max-w-[280px] md:max-w-[320px] flex justify-center items-end">
           <div className="relative rounded-2xl overflow-hidden shadow-2xl">
             <img
@@ -90,24 +97,42 @@ export const ScreenMemorialCard: React.FC<ScreenMemorialCardProps> = ({
 
           {!isFlipped ? (
             <div className="relative z-10 flex flex-col items-center text-center space-y-3">
-              {/* "H E A V E N ' S   G A I N" */}
+              {/* Header super title */}
               <div className="tracking-[0.45em] text-[11px] sm:text-xs font-cinzel font-semibold text-amber-200/90 uppercase">
-                {memorial.headerSuperTitle}
+                {memorial.headerSuperTitle || (isEn ? "H E A V E N ' S   G A I N" : "R E P O S   É T E R N E L")}
               </div>
 
-              {/* "TRANSITION TO GLORY" */}
-              <div className="flex flex-col items-center">
-                <div className="flex items-center space-x-1">
-                  <span className="font-cinzel text-xl sm:text-2xl font-black tracking-tight text-gold-gradient leading-none">
-                    TRANSITION
-                  </span>
-                  <span className="w-5 h-5 rounded-full bg-gradient-to-b from-amber-400 to-amber-700 text-[9px] font-bold text-neutral-950 flex items-center justify-center shadow-xs">
-                    TO
-                  </span>
-                </div>
-                <span className="font-cinzel text-2xl sm:text-3xl font-black tracking-wider text-gold-gradient -mt-1 leading-none">
-                  GLORY
-                </span>
+              {/* TRANSITION VERS LA GLOIRE */}
+              <div className="flex flex-col items-center text-center">
+                {isEn ? (
+                  <>
+                    <div className="flex items-center space-x-1">
+                      <span className="font-cinzel text-xl sm:text-2xl font-black tracking-tight text-gold-gradient leading-none">
+                        TRANSITION
+                      </span>
+                      <span className="w-5 h-5 rounded-full bg-gradient-to-b from-amber-400 to-amber-700 text-[9px] font-bold text-neutral-950 flex items-center justify-center shadow-xs">
+                        TO
+                      </span>
+                    </div>
+                    <span className="font-cinzel text-2xl sm:text-3xl font-black tracking-wider text-gold-gradient -mt-1 leading-none">
+                      GLORY
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center space-x-1">
+                      <span className="font-cinzel text-xl sm:text-2xl font-black tracking-tight text-gold-gradient leading-none">
+                        TRANSITION
+                      </span>
+                      <span className="w-6 h-5 rounded-full bg-gradient-to-b from-amber-400 to-amber-700 text-[8px] font-bold text-neutral-950 flex items-center justify-center shadow-xs">
+                        VERS
+                      </span>
+                    </div>
+                    <span className="font-cinzel text-2xl sm:text-3xl font-black tracking-wider text-gold-gradient -mt-1 leading-none">
+                      LA GLOIRE
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* Preamble */}
@@ -135,13 +160,13 @@ export const ScreenMemorialCard: React.FC<ScreenMemorialCardProps> = ({
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-1">
                   <span className="text-[6px] tracking-wider text-amber-950 font-bold font-montserrat uppercase">
-                    AGED
+                    {isEn ? 'AGED' : 'ÂGÉ DE'}
                   </span>
                   <span className="text-base sm:text-xl font-cinzel font-black text-amber-950 leading-none">
                     {memorial.age}
                   </span>
                   <span className="text-[6px] tracking-wider text-amber-950 font-bold font-montserrat uppercase">
-                    YEARS
+                    {isEn ? 'YEARS' : 'ANS'}
                   </span>
                 </div>
               </div>
@@ -149,7 +174,7 @@ export const ScreenMemorialCard: React.FC<ScreenMemorialCardProps> = ({
               {/* OBSEQUIES Section */}
               <div className="w-full space-y-2 text-center pt-1 border-t border-amber-500/20">
                 <h3 className="font-cinzel text-lg font-bold tracking-widest text-gold-gradient uppercase">
-                  OBSEQUIES
+                  {isEn ? 'OBSEQUIES' : 'OBSÈQUES'}
                 </h3>
 
                 {/* Service of Songs */}
@@ -161,14 +186,14 @@ export const ScreenMemorialCard: React.FC<ScreenMemorialCardProps> = ({
                     {memorial.serviceOfSongs.dateTime}
                   </div>
                   <div className="text-[10px] text-amber-200/80">
-                    {memorial.serviceOfSongs.venueName}, {memorial.serviceOfSongs.address}
+                    {memorial.serviceOfSongs.venueName}
                   </div>
                 </div>
 
                 {/* FAREWELL / FUNERAL SERVICE */}
                 <div className="space-y-0.5 pt-1">
                   <div className="font-cinzel text-xs font-bold text-amber-300 tracking-wider uppercase">
-                    FAREWELL
+                    {memorial.funeralService.title}
                   </div>
                   <div className="text-[11px] text-neutral-100 leading-tight">
                     {memorial.funeralService.dateTime}
@@ -178,7 +203,7 @@ export const ScreenMemorialCard: React.FC<ScreenMemorialCardProps> = ({
                     {memorial.funeralService.serviceStartTime}
                   </div>
                   <div className="text-[10px] text-amber-200/80">
-                    {memorial.funeralService.venueName}, {memorial.funeralService.address}
+                    {memorial.funeralService.venueName}
                   </div>
                 </div>
 
@@ -196,40 +221,37 @@ export const ScreenMemorialCard: React.FC<ScreenMemorialCardProps> = ({
               </div>
 
               <h3 className="font-cinzel text-lg font-bold text-gold-gradient uppercase">
-                Scripture of Hope
+                {isEn ? 'Scripture of Hope' : 'Verset d’Espérance'}
               </h3>
 
               <blockquote className="font-cormorant italic text-base sm:text-lg text-neutral-100 leading-relaxed px-2 border-y border-amber-400/20 py-3">
-                “I have fought a good fight, I have finished my course, I have kept the faith: Henceforth there is laid up for me a crown of righteousness, which the Lord, the righteous judge, shall give me at that day.”
+                « {memorial.bibleVerse} »
               </blockquote>
 
               <p className="font-cinzel text-xs tracking-widest text-amber-300 font-bold">
-                — 2 TIMOTHY 4:7-8
+                — {memorial.verseReference}
               </p>
 
               <div className="pt-3 text-xs text-neutral-300 space-y-1">
-                <p className="font-semibold text-amber-200">The Oyenuga & Extended Families</p>
+                <p className="font-semibold text-amber-200">
+                  {isEn ? 'The Bereaved Family & Relatives' : 'La Famille éplorée & les Proches'}
+                </p>
                 <p className="text-[11px] text-neutral-400">
-                  Gratefully acknowledge all prayers, visits, and support during this season of celebration.
+                  {isEn
+                    ? 'Gratefully acknowledge all prayers, visits, and support during this season.'
+                    : 'Vous remercient sincèrement pour vos prières, vos visites et votre précieux soutien.'}
                 </p>
               </div>
 
               <button
                 onClick={() => setIsFlipped(false)}
-                className="mt-3 px-4 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400 text-amber-200 text-xs font-semibold"
+                className="mt-3 px-4 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400 text-amber-200 text-xs font-semibold cursor-pointer"
               >
-                Back to Memorial Card
+                {isEn ? 'Back to Memorial Card' : 'Retour au Faire-part'}
               </button>
             </div>
           )}
         </motion.div>
-      </div>
-
-      {/* Bottom helper */}
-      <div className="relative z-20 pb-3 px-4 text-center">
-        <span className="text-[11px] text-neutral-400">
-          Tip: Click <span className="text-amber-300 font-semibold">Share</span> to copy dynamic embed links or download this card.
-        </span>
       </div>
     </div>
   );

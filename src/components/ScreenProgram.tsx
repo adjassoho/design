@@ -1,22 +1,43 @@
 import React from 'react';
-import { MemorialProfile } from '../types';
+import { FuneralProfile, GuestItem } from '../types';
 import { waxSealDefault } from '../data/defaultMemorial';
-import { Calendar, MapPin, ChevronRight, BookOpen, Heart, Sparkles } from 'lucide-react';
+import {
+  Calendar,
+  MapPin,
+  ChevronRight,
+  BookOpen,
+  Heart,
+  Sparkles,
+  Navigation,
+  Flame,
+  CheckCircle2,
+  Shirt,
+} from 'lucide-react';
 import { motion } from 'motion/react';
+import { LiveCountdown } from './LiveCountdown';
+import { LiveItineraryButton } from './LiveItineraryButton';
 
 interface ScreenProgramProps {
-  memorial: MemorialProfile;
+  memorial: FuneralProfile;
+  activeGuest?: GuestItem | null;
+  isCollective?: boolean;
   onNavigateTab: (tab: any) => void;
+  onOpenRsvpModal?: () => void;
   onLightCandle?: () => void;
 }
 
 export const ScreenProgram: React.FC<ScreenProgramProps> = ({
   memorial,
+  activeGuest,
+  isCollective,
   onNavigateTab,
+  onOpenRsvpModal,
   onLightCandle,
 }) => {
+  const isEn = memorial.language === 'en';
+
   return (
-    <div className="relative w-full h-full min-h-[720px] flex flex-col justify-between overflow-y-auto overflow-x-hidden select-none bg-neutral-950">
+    <div className="relative w-full flex-1 flex flex-col justify-between overflow-x-hidden select-none bg-neutral-950 pb-6">
       {/* Background Heavenly Clouds & Radiant Glow */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <img
@@ -29,38 +50,78 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
         <div className="absolute inset-0 bg-gradient-to-b from-amber-100/30 via-transparent to-neutral-950/80 pointer-events-none" />
       </div>
 
+      {/* Guest Personalized Top Welcome Banner */}
+      <div className="relative z-20 mx-3 mt-2 px-3 py-1.5 bg-neutral-900/90 border border-amber-500/40 rounded-xl shadow-lg flex items-center justify-between text-xs">
+        <div className="flex items-center gap-1.5 text-amber-200">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span className="font-serif italic">{isEn ? 'Welcome,' : 'Bienvenue,'}</span>
+          <span className="font-bold text-white">
+            {activeGuest?.displayName || (isEn ? 'Madam / Sir' : 'Madame / Monsieur')}
+          </span>
+        </div>
+        {activeGuest?.rsvpStatus === 'yes' ? (
+          <span className="text-[10px] px-2 py-0.5 bg-emerald-950 border border-emerald-500/40 text-emerald-300 rounded-full font-bold">
+            {isEn ? '✓ RSVP Confirmed' : '✓ Présence confirmée'}
+          </span>
+        ) : (
+          <button
+            onClick={onOpenRsvpModal}
+            className="text-[10px] px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-lg cursor-pointer transition-all active:scale-95"
+          >
+            {isEn ? 'Confirm RSVP' : 'Confirmer RSVP'}
+          </button>
+        )}
+      </div>
+
       {/* Top Header Elements */}
       <header className="relative z-10 pt-2 px-6 flex flex-col items-center">
-        {/* "H E A V E N ' S   G A I N" */}
+        {/* Header Super Title */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           className="w-full text-center tracking-[0.45em] text-[13px] sm:text-[14px] font-cinzel font-semibold text-amber-900/90 uppercase drop-shadow-sm mb-1"
         >
-          {memorial.headerSuperTitle}
+          {memorial.headerSuperTitle || (isEn ? "H E A V E N ' S   G A I N" : "R E P O S   É T E R N E L")}
         </motion.div>
 
-        {/* "TRANSITION TO GLORY" Logo Banner on Top Right */}
+        {/* Headline Banner */}
         <div className="w-full flex justify-end pr-1">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.9, delay: 0.2 }}
-            className="flex flex-col items-end"
+            className="flex flex-col items-end text-right"
           >
-            <div className="flex items-center space-x-1">
-              <span className="font-cinzel text-xl sm:text-2xl font-black tracking-tight text-[#6D1B28] leading-none">
-                TRANSITION
-              </span>
-              {/* Circular "TO" medallion */}
-              <span className="w-5 h-5 rounded-full bg-gradient-to-b from-amber-600 to-amber-800 text-[9px] font-bold text-amber-100 flex items-center justify-center shadow-sm">
-                TO
-              </span>
-            </div>
-            <span className="font-cinzel text-2xl sm:text-3xl font-black tracking-wide text-[#6D1B28] -mt-1 leading-none">
-              GLORY
-            </span>
+            {isEn ? (
+              <>
+                <div className="flex items-center space-x-1">
+                  <span className="font-cinzel text-xl sm:text-2xl font-black tracking-tight text-[#6D1B28] leading-none">
+                    TRANSITION
+                  </span>
+                  <span className="w-5 h-5 rounded-full bg-gradient-to-b from-amber-600 to-amber-800 text-[9px] font-bold text-amber-100 flex items-center justify-center shadow-sm">
+                    TO
+                  </span>
+                </div>
+                <span className="font-cinzel text-2xl sm:text-3xl font-black tracking-wide text-[#6D1B28] -mt-1 leading-none">
+                  GLORY
+                </span>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center space-x-1">
+                  <span className="font-cinzel text-xl sm:text-2xl font-black tracking-tight text-[#6D1B28] leading-none">
+                    TRANSITION
+                  </span>
+                  <span className="w-6 h-5 rounded-full bg-gradient-to-b from-amber-600 to-amber-800 text-[8px] font-bold text-amber-100 flex items-center justify-center shadow-sm">
+                    VERS
+                  </span>
+                </div>
+                <span className="font-cinzel text-2xl sm:text-3xl font-black tracking-wide text-[#6D1B28] -mt-1 leading-none">
+                  LA GLOIRE
+                </span>
+              </>
+            )}
           </motion.div>
         </div>
       </header>
@@ -85,31 +146,30 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
             <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-transparent pointer-events-none" />
           </div>
 
-          {/* Gold Wax Seal Badge ("AGED 71 YEARS") */}
+          {/* Gold Wax Seal Badge ("ÂGÉ DE 71 ANS" / "AGED 71 YEARS") */}
           <motion.button
             whileHover={{ scale: 1.06, rotate: 3 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => onNavigateTab('biography')}
-            title="Click to view Life Milestones"
-            className="absolute -right-3 sm:-right-4 top-[62%] -translate-y-1/2 z-20 focus:outline-hidden"
+            title="Consulter les étapes de vie & Biographie"
+            className="absolute -right-3 sm:-right-4 top-[62%] -translate-y-1/2 z-20 focus:outline-hidden cursor-pointer"
           >
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]">
-              {/* Wax Seal Image or Custom Gold Seal */}
               <img
                 src={waxSealDefault}
                 alt={memorial.sealLabel}
                 className="w-full h-full object-contain filter drop-shadow-md"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-1.5">
                 <span className="text-[7px] sm:text-[8px] tracking-wider text-amber-950 font-bold font-montserrat uppercase">
-                  AGED
+                  {isEn ? 'AGED' : 'ÂGÉ DE'}
                 </span>
                 <span className="text-xl sm:text-2xl font-cinzel font-black text-amber-950 leading-none my-0.5">
                   {memorial.age}
                 </span>
                 <span className="text-[7px] sm:text-[8px] tracking-wider text-amber-950 font-bold font-montserrat uppercase">
-                  YEARS
+                  {isEn ? 'YEARS' : 'ANS'}
                 </span>
               </div>
             </div>
@@ -117,8 +177,8 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
         </motion.div>
       </div>
 
-      {/* Main Dark Onyx Obsequies Card matching Image 1 */}
-      <div className="relative z-20 px-3 pb-3 -mt-6">
+      {/* Main Dark Onyx Obsequies Card */}
+      <div className="relative z-20 px-3 pb-3 -mt-6 space-y-3">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -131,7 +191,7 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
           {/* Top Notch Decorative Arch */}
           <div className="text-center mb-3">
             <h2 className="font-cinzel text-2xl sm:text-3xl font-extrabold tracking-widest text-gold-gradient drop-shadow uppercase">
-              OBSEQUIES
+              {isEn ? 'OBSEQUIES' : 'OBSÈQUES'}
             </h2>
             {/* Elegant curved gold divider */}
             <div className="flex items-center justify-center space-x-2 mt-0.5">
@@ -171,6 +231,14 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
               </div>
             </div>
 
+            {/* Dress Code Badge if provided */}
+            {memorial.dressCode && (
+              <div className="py-1 px-2.5 bg-neutral-900/90 border border-neutral-800 rounded-xl inline-flex items-center gap-1.5 text-[11px] text-neutral-300 mx-auto">
+                <Shirt className="w-3 h-3 text-amber-400" />
+                <span>{isEn ? 'Dress Code:' : 'Tenue recommandée :'} <strong className="text-white">{memorial.dressCode}</strong></span>
+              </div>
+            )}
+
             {/* Prominent Name & Lifespan Typography */}
             <div className="pt-2 text-right pr-2">
               <h3 className="font-cormorant italic text-2xl sm:text-3xl font-bold tracking-tight text-white leading-none">
@@ -193,20 +261,34 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
           <div className="mt-4 pt-3 border-t border-amber-500/20 grid grid-cols-2 gap-2">
             <button
               onClick={() => onNavigateTab('order-of-service')}
-              className="py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+              className="py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Full Order of Service</span>
+              <span>{isEn ? 'Order of Service' : 'Ordre du Culte'}</span>
             </button>
             <button
-              onClick={() => onNavigateTab('tributes')}
-              className="py-2 px-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-neutral-950 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all active:scale-95"
+              onClick={onOpenRsvpModal || onLightCandle}
+              className="py-2 px-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-neutral-950 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer active:scale-95"
             >
-              <Heart className="w-3.5 h-3.5 fill-current" />
-              <span>Light a Candle</span>
+              <Flame className="w-3.5 h-3.5 fill-current text-neutral-950" />
+              <span>{isEn ? 'RSVP & Condolences' : 'RSVP & Condoléances'}</span>
             </button>
           </div>
         </motion.div>
+
+        {/* Live Countdown to Funeral Service */}
+        <LiveCountdown
+          targetDateString="2025-02-14T10:00:00"
+          targetTitle={isEn ? "Funeral Service & Obsequies" : "Culte d’Obsèques & Inhumation"}
+        />
+
+        {/* GPS Itinerary Direct Action */}
+        <LiveItineraryButton
+          venueName={memorial.funeralService.venueName}
+          venueAddress={memorial.funeralService.address}
+          destinationLat={memorial.venueLat}
+          destinationLng={memorial.venueLng}
+        />
       </div>
     </div>
   );

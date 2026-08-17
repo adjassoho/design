@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { MemorialProfile, OrderOfServiceItem } from '../types';
+import { FuneralProfile, OrderOfServiceItem } from '../types';
 import { defaultOrderOfService } from '../data/defaultMemorial';
-import { Clock, BookOpen, User, Church, MapPin, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Clock, BookOpen, User, Church, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ScreenOrderOfServiceProps {
-  memorial: MemorialProfile;
+  memorial: FuneralProfile;
   onOpenHymn?: (hymnRef: string) => void;
 }
 
@@ -13,6 +13,7 @@ export const ScreenOrderOfService: React.FC<ScreenOrderOfServiceProps> = ({
   memorial,
   onOpenHymn,
 }) => {
+  const isEn = memorial.language === 'en';
   const [activeTab, setActiveTab] = useState<'funeral' | 'songs'>('funeral');
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
 
@@ -21,43 +22,44 @@ export const ScreenOrderOfService: React.FC<ScreenOrderOfServiceProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full min-h-[720px] flex flex-col justify-between overflow-y-auto bg-neutral-950 text-neutral-100 p-4 select-none font-sans-custom">
+    <div className="relative w-full flex-1 flex flex-col justify-between bg-neutral-950 text-neutral-100 p-4 select-none font-sans-custom pb-6">
       {/* Background Soft Glow */}
       <div className="absolute top-0 right-0 w-72 h-72 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
       <div className="relative z-10 pt-2 pb-3 text-center border-b border-amber-500/20">
         <div className="text-[11px] font-cinzel font-semibold tracking-[0.3em] text-amber-400 uppercase">
-          Order of Solemn Proceedings
+          {isEn ? 'Order of Solemn Proceedings' : 'Déroulement de la Cérémonie'}
         </div>
-        <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-gold-gradient mt-0.5 uppercase">
-          Order of Service
+        <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-amber-200 mt-0.5 uppercase">
+          {isEn ? 'Order of Service' : 'Programme du Culte'}
         </h2>
         <p className="text-xs text-neutral-400 mt-0.5">
-          In Loving Celebration of <span className="text-amber-200 font-semibold">{memorial.fullName}</span>
+          {isEn ? 'In loving celebration of ' : 'Célébration solennelle pour '}
+          <span className="text-amber-200 font-semibold">{memorial.fullName}</span>
         </p>
 
         {/* Tab Switcher: Funeral Service vs Service of Songs */}
         <div className="flex items-center justify-center mt-3 bg-neutral-900 p-1 rounded-xl border border-neutral-800 max-w-xs mx-auto">
           <button
             onClick={() => setActiveTab('funeral')}
-            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'funeral'
-                ? 'bg-amber-500 text-neutral-950 shadow'
+                ? 'bg-amber-500 text-neutral-950 shadow font-bold'
                 : 'text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            Funeral Service (Feb 14)
+            {isEn ? 'Funeral Service' : 'Culte d’Obsèques'}
           </button>
           <button
             onClick={() => setActiveTab('songs')}
-            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'songs'
-                ? 'bg-amber-500 text-neutral-950 shadow'
+                ? 'bg-amber-500 text-neutral-950 shadow font-bold'
                 : 'text-neutral-400 hover:text-neutral-200'
             }`}
           >
-            Service of Songs (Feb 13)
+            {isEn ? 'Service of Songs' : 'Veillée de Prières'}
           </button>
         </div>
       </div>
@@ -86,7 +88,7 @@ export const ScreenOrderOfService: React.FC<ScreenOrderOfServiceProps> = ({
 
             {/* Timeline Steps */}
             <div className="space-y-2.5">
-              {defaultOrderOfService.map((item, idx) => {
+              {(memorial.orderOfService || defaultOrderOfService).map((item, idx) => {
                 const isChecked = !!completedSteps[item.id];
                 return (
                   <motion.div
@@ -138,10 +140,10 @@ export const ScreenOrderOfService: React.FC<ScreenOrderOfServiceProps> = ({
                                   e.stopPropagation();
                                   if (onOpenHymn) onOpenHymn(item.hymnRef!);
                                 }}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-[11px] font-semibold transition-all"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-[11px] font-semibold transition-all cursor-pointer"
                               >
                                 <BookOpen className="w-3 h-3 text-amber-400" />
-                                <span>Sing {item.hymnRef}</span>
+                                <span>{isEn ? 'Sing Cantique' : 'Chanter ce Cantique'}</span>
                                 <ChevronRight className="w-3 h-3" />
                               </button>
                             </div>
@@ -150,8 +152,8 @@ export const ScreenOrderOfService: React.FC<ScreenOrderOfServiceProps> = ({
                       </div>
 
                       <button
-                        title={isChecked ? "Mark as upcoming" : "Mark as completed"}
-                        className="text-neutral-500 hover:text-amber-400 p-1"
+                        title={isChecked ? (isEn ? "Mark as upcoming" : "Marquer comme à venir") : (isEn ? "Mark as completed" : "Marquer comme terminé")}
+                        className="text-neutral-500 hover:text-amber-400 p-1 cursor-pointer"
                       >
                         <CheckCircle2 className={`w-4 h-4 ${isChecked ? 'text-amber-400' : 'text-neutral-700'}`} />
                       </button>
@@ -165,7 +167,7 @@ export const ScreenOrderOfService: React.FC<ScreenOrderOfServiceProps> = ({
             {memorial.receptionDetail && (
               <div className="bg-gradient-to-r from-amber-950/40 via-neutral-900 to-neutral-900 rounded-2xl p-4 border border-amber-500/40 mt-4 text-xs space-y-1">
                 <div className="font-cinzel font-bold text-amber-300 text-sm">
-                  RECEPTION & THANKSGIVING BANQUET
+                  {isEn ? 'RECEPTION & THANKSGIVING BANQUET' : 'RÉCEPTION & RAFRAÎCHISSEMENTS'}
                 </div>
                 <p className="text-neutral-200 font-semibold">{memorial.receptionDetail.venue}</p>
                 <p className="text-neutral-400">{memorial.receptionDetail.time}</p>
@@ -178,10 +180,12 @@ export const ScreenOrderOfService: React.FC<ScreenOrderOfServiceProps> = ({
           <div className="space-y-4">
             <div className="bg-neutral-900/90 rounded-2xl p-4 border border-amber-500/30 space-y-2">
               <div className="font-cinzel text-sm font-bold text-amber-300">
-                CHRISTIAN WAKE KEEP & SERVICE OF SONGS
+                {isEn ? 'CHRISTIAN WAKE KEEP & SERVICE OF SONGS' : 'VEILLÉE DE PRIÈRES & CHANTS D’HOMMAGE'}
               </div>
               <p className="text-xs text-neutral-300 leading-relaxed">
-                A night of praise, worship, scripture reflections, and heartfelt tributes honoring the exemplary Christian life of Pa Peter Abiodun Oyenuga.
+                {isEn
+                  ? `A night of praise, worship, scripture reflections, and heartfelt tributes honoring the exemplary Christian life of ${memorial.fullName}.`
+                  : `Une soirée de louanges, d’adoration, de méditation des Écritures et de chaleureux hommages en l’honneur de la mémoire bénie de ${memorial.fullName}.`}
               </p>
               <div className="text-xs text-amber-200/90 flex items-center gap-1.5 pt-1">
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
@@ -191,32 +195,32 @@ export const ScreenOrderOfService: React.FC<ScreenOrderOfServiceProps> = ({
 
             <div className="bg-neutral-900/70 rounded-2xl p-4 border border-neutral-800 space-y-3 text-xs">
               <h4 className="font-cinzel text-amber-200 font-bold uppercase tracking-wider text-xs">
-                Evening Program Outline
+                {isEn ? 'Evening Program Outline' : 'Déroulement de la Veillée'}
               </h4>
               <ul className="space-y-2.5 text-neutral-300">
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center shrink-0 text-[10px]">1</span>
-                  <span>Praise & Worship Session — <em>Vine Branch Worship Team</em></span>
+                  <span>{isEn ? 'Praise & Worship Session — Worship Team' : 'Louanges & Adoration — Chœur de la Paroisse'}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center shrink-0 text-[10px]">2</span>
-                  <span>Opening Prayer & Hymn: "What A Friend We Have In Jesus"</span>
+                  <span>{isEn ? 'Opening Prayer & Hymn of Faith' : 'Prière d’Ouverture & Cantique de Foi'}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center shrink-0 text-[10px]">3</span>
-                  <span>Scripture Exhortation (1 Corinthians 15:51-58)</span>
+                  <span>{isEn ? 'Scripture Exhortation (1 Corinthians 15:51-58)' : 'Exhortation Biblique (1 Corinthiens 15:51-58)'}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center shrink-0 text-[10px]">4</span>
-                  <span>Words of Tribute from In-laws, Professional Colleagues & Social Clubs</span>
+                  <span>{isEn ? 'Words of Tribute from Family & Friends' : 'Témoignages de la Famille, des Amis & Collègues'}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center shrink-0 text-[10px]">5</span>
-                  <span>Musical Renditions & Candle Lighting of Remembrance</span>
+                  <span>{isEn ? 'Musical Renditions & Candle Lighting of Remembrance' : 'Moments de Recueillement & Allumage des Bougies'}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center shrink-0 text-[10px]">6</span>
-                  <span>Closing Benediction & Light Refreshment</span>
+                  <span>{isEn ? 'Closing Benediction & Refreshment' : 'Bénédiction Pastorale Finale & Collation'}</span>
                 </li>
               </ul>
             </div>

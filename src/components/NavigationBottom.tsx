@@ -1,109 +1,109 @@
 import React from 'react';
-import { Layers, Heart, Image as ImageIcon, Share2, BookOpen, ScrollText } from 'lucide-react';
+import {
+  Layers,
+  Heart,
+  Share2,
+  BookOpen,
+  ScrollText,
+  Users,
+  Music,
+  UserCheck,
+} from 'lucide-react';
 
-export type TabType = 'program' | 'memorial-card' | 'order-of-service' | 'tributes' | 'photos' | 'hymns' | 'biography' | 'share';
+export type TabType =
+  | 'program'
+  | 'memorial-card'
+  | 'order-of-service'
+  | 'tributes'
+  | 'photos'
+  | 'hymns'
+  | 'biography'
+  | 'share'
+  | 'dashboard';
 
 interface NavigationBottomProps {
   currentTab: TabType;
   onSelectTab: (tab: TabType) => void;
   tributesCount?: number;
+  isPaid?: boolean;
+  isGuestMode?: boolean;
+  language?: 'fr' | 'en';
 }
 
 export const NavigationBottom: React.FC<NavigationBottomProps> = ({
   currentTab,
   onSelectTab,
   tributesCount = 5,
+  isGuestMode = false,
+  language = 'fr',
 }) => {
+  // Navigation tabs for Guest Mode vs Organizer Mode
+  const guestNavItems: { id: TabType; labelFr: string; labelEn: string; icon: React.FC<{ className?: string }> }[] = [
+    { id: 'program', labelFr: 'Programme', labelEn: 'Program', icon: Layers },
+    { id: 'memorial-card', labelFr: 'Faire-part', labelEn: 'Card', icon: ScrollText },
+    { id: 'order-of-service', labelFr: 'Culte', labelEn: 'Service', icon: BookOpen },
+    { id: 'tributes', labelFr: 'Hommages', labelEn: 'Tributes', icon: Heart },
+    { id: 'hymns', labelFr: 'Cantiques', labelEn: 'Hymns', icon: Music },
+    { id: 'biography', labelFr: 'Biographie', labelEn: 'Biography', icon: UserCheck },
+  ];
+
+  const organizerNavItems: { id: TabType; labelFr: string; labelEn: string; icon: React.FC<{ className?: string }> }[] = [
+    { id: 'program', labelFr: 'Programme', labelEn: 'Program', icon: Layers },
+    { id: 'memorial-card', labelFr: 'Carte', labelEn: 'Card', icon: ScrollText },
+    { id: 'order-of-service', labelFr: 'Culte', labelEn: 'Service', icon: BookOpen },
+    { id: 'tributes', labelFr: 'Hommages', labelEn: 'Tributes', icon: Heart },
+    { id: 'dashboard', labelFr: 'Invités', labelEn: 'Guests', icon: Users },
+    { id: 'share', labelFr: 'Partage', labelEn: 'Share', icon: Share2 },
+  ];
+
+  const activeItems = isGuestMode ? guestNavItems : organizerNavItems;
+
   return (
     <nav
       id="memorial-bottom-navigation"
       aria-label="Memorial Navigation"
-      className="bg-neutral-900/95 backdrop-blur-md border-t border-amber-500/20 px-2 py-2 flex items-center justify-around z-30 shadow-2xl relative"
+      className="sticky bottom-0 z-40 w-full bg-neutral-950/95 backdrop-blur-md border-t border-amber-500/25 px-1 pt-1.5 pb-2 shadow-2xl safe-area-pb"
     >
-      {/* Tab 1: Program (Screen 1) */}
-      <button
-        id="nav-tab-program"
-        onClick={() => onSelectTab('program')}
-        className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg transition-all ${
-          currentTab === 'program'
-            ? 'text-amber-300 font-semibold scale-105'
-            : 'text-neutral-400 hover:text-neutral-200'
-        }`}
-      >
-        <div className={`p-1 rounded-md ${currentTab === 'program' ? 'bg-amber-500/20' : ''}`}>
-          <Layers className="w-5 h-5" />
-        </div>
-        <span className="text-[11px] tracking-wide mt-0.5">Program</span>
-      </button>
+      <div className="grid grid-cols-6 gap-1 items-center max-w-lg mx-auto">
+        {activeItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentTab === item.id;
+          const label = language === 'en' ? item.labelEn : item.labelFr;
 
-      {/* Tab 2: Memorial Card (Screen 2) */}
-      <button
-        id="nav-tab-memorial-card"
-        onClick={() => onSelectTab('memorial-card')}
-        className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-lg transition-all ${
-          currentTab === 'memorial-card'
-            ? 'text-amber-300 font-semibold scale-105'
-            : 'text-neutral-400 hover:text-neutral-200'
-        }`}
-      >
-        <div className={`p-1 rounded-md ${currentTab === 'memorial-card' ? 'bg-amber-500/20' : ''}`}>
-          <ScrollText className="w-5 h-5" />
-        </div>
-        <span className="text-[11px] tracking-wide mt-0.5">Card</span>
-      </button>
+          return (
+            <button
+              key={item.id}
+              id={`nav-tab-${item.id}`}
+              onClick={() => onSelectTab(item.id)}
+              className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition-all cursor-pointer select-none relative ${
+                isActive
+                  ? 'text-amber-300 font-bold'
+                  : 'text-neutral-400 hover:text-neutral-200'
+              }`}
+            >
+              <div
+                className={`p-1.5 rounded-xl transition-all ${
+                  isActive
+                    ? 'bg-amber-500/20 text-amber-300 shadow-inner'
+                    : 'hover:bg-neutral-900'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] tracking-tight mt-0.5 whitespace-nowrap truncate max-w-full">
+                {label}
+              </span>
 
-      {/* Tab 3: Tributes */}
-      <button
-        id="nav-tab-tributes"
-        onClick={() => onSelectTab('tributes')}
-        className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg transition-all relative ${
-          currentTab === 'tributes'
-            ? 'text-amber-300 font-semibold scale-105'
-            : 'text-neutral-400 hover:text-neutral-200'
-        }`}
-      >
-        <div className={`p-1 rounded-md ${currentTab === 'tributes' ? 'bg-amber-500/20' : ''}`}>
-          <Heart className="w-5 h-5 fill-current/30" />
-        </div>
-        <span className="text-[11px] tracking-wide mt-0.5">Tributes</span>
-        {tributesCount > 0 && (
-          <span className="absolute top-0 right-2 w-4 h-4 bg-amber-600 text-[9px] font-bold text-white rounded-full flex items-center justify-center shadow">
-            {tributesCount}
-          </span>
-        )}
-      </button>
-
-      {/* Tab 4: Photos */}
-      <button
-        id="nav-tab-photos"
-        onClick={() => onSelectTab('photos')}
-        className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg transition-all ${
-          currentTab === 'photos'
-            ? 'text-amber-300 font-semibold scale-105'
-            : 'text-neutral-400 hover:text-neutral-200'
-        }`}
-      >
-        <div className={`p-1 rounded-md ${currentTab === 'photos' ? 'bg-amber-500/20' : ''}`}>
-          <ImageIcon className="w-5 h-5" />
-        </div>
-        <span className="text-[11px] tracking-wide mt-0.5">Photos</span>
-      </button>
-
-      {/* Tab 5: Share */}
-      <button
-        id="nav-tab-share"
-        onClick={() => onSelectTab('share')}
-        className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg transition-all ${
-          currentTab === 'share'
-            ? 'text-amber-300 font-semibold scale-105'
-            : 'text-neutral-400 hover:text-neutral-200'
-        }`}
-      >
-        <div className={`p-1 rounded-md ${currentTab === 'share' ? 'bg-amber-500/20' : ''}`}>
-          <Share2 className="w-5 h-5" />
-        </div>
-        <span className="text-[11px] tracking-wide mt-0.5">Share</span>
-      </button>
+              {/* Tributes Counter Badge */}
+              {item.id === 'tributes' && tributesCount > 0 && (
+                <span className="absolute top-0 right-1 sm:right-2 w-3.5 h-3.5 bg-amber-600 text-[8px] font-bold text-white rounded-full flex items-center justify-center shadow">
+                  {tributesCount}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </nav>
   );
 };

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { TributeItem, MemorialProfile } from '../types';
-import { Heart, Flame, MessageSquarePlus, Filter, Sparkles, Send, X, Check } from 'lucide-react';
+import { TributeItem, FuneralProfile } from '../types';
+import { Heart, Flame, MessageSquarePlus, Sparkles, Send, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ScreenTributesProps {
-  memorial: MemorialProfile;
+  memorial: FuneralProfile;
   tributes: TributeItem[];
   onAddTribute: (tribute: TributeItem) => void;
 }
@@ -15,7 +15,8 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
   tributes,
   onAddTribute,
 }) => {
-  const [filter, setFilter] = useState<string>('All');
+  const isEn = memorial.language === 'en';
+  const [filter, setFilter] = useState<string>('Tous');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [litCandlesCount, setLitCandlesCount] = useState<number>(
     tributes.filter((t) => t.candleLit).length + 42
@@ -24,12 +25,12 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
 
   // Form State
   const [authorName, setAuthorName] = useState('');
-  const [relationship, setRelationship] = useState<TributeItem['relationship']>('Children');
+  const [relationship, setRelationship] = useState<string>(isEn ? 'Children' : 'Enfants');
   const [message, setMessage] = useState('');
   const [location, setLocation] = useState('');
   const [includeCandle, setIncludeCandle] = useState(true);
 
-  // Trigger celebration petals & candle
+  // Quick candle light
   const handleQuickLightCandle = () => {
     if (!hasUserLitCandle) {
       setLitCandlesCount((c) => c + 1);
@@ -52,7 +53,7 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
       author: authorName.trim(),
       relationship,
       content: message.trim(),
-      date: 'Just now',
+      date: isEn ? 'Just now' : 'À l’instant',
       candleLit: includeCandle,
       candleColor: '#F5D77F',
       location: location.trim() || undefined,
@@ -70,36 +71,49 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
       colors: ['#D4AF37', '#FFF0D0', '#7A1C28'],
     });
 
-    // Reset
     setAuthorName('');
     setMessage('');
     setLocation('');
     setIsModalOpen(false);
   };
 
+  const filterCategories = isEn
+    ? ['All', 'Spouse', 'Children', 'Grandchildren', 'Church', 'Friends']
+    : ['Tous', 'Épouse', 'Enfants', 'Petits-enfants', 'Église', 'Amis'];
+
   const filteredTributes =
-    filter === 'All'
+    filter === 'Tous' || filter === 'All'
       ? tributes
-      : tributes.filter((t) => t.relationship.toLowerCase().includes(filter.toLowerCase()));
+      : tributes.filter((t) => {
+          const rel = (t.relationship || '').toLowerCase();
+          const f = filter.toLowerCase();
+          if (f === 'épouse' || f === 'spouse') return rel.includes('épous') || rel.includes('wife') || rel.includes('spouse');
+          if (f === 'enfants' || f === 'children') return rel.includes('enfant') || rel.includes('child') || rel.includes('fils') || rel.includes('fille');
+          if (f === 'petits-enfants' || f === 'grandchildren') return rel.includes('petit') || rel.includes('grand');
+          if (f === 'église' || f === 'church') return rel.includes('églis') || rel.includes('church') || rel.includes('minist') || rel.includes('parois');
+          if (f === 'amis' || f === 'friends') return rel.includes('ami') || rel.includes('friend') || rel.includes('collègue');
+          return rel.includes(f);
+        });
 
   return (
-    <div className="relative w-full h-full min-h-[720px] flex flex-col justify-between overflow-y-auto bg-neutral-950 text-neutral-100 p-4 font-sans-custom select-none">
+    <div className="relative w-full flex-1 flex flex-col justify-between bg-neutral-950 text-neutral-100 p-4 font-sans-custom select-none pb-6">
       {/* Top Banner & Candle Lighting Station */}
       <div className="relative z-10 space-y-3 pb-3 border-b border-amber-500/20">
         <div className="text-center">
           <span className="text-[10px] font-cinzel tracking-[0.3em] text-amber-400 font-semibold uppercase">
-            Tributes & Condolence Book
+            {isEn ? 'Tributes & Condolence Book' : 'Livre de Condoléances & Hommages'}
           </span>
-          <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-gold-gradient uppercase mt-0.5">
-            Words of Love & Honor
+          <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-amber-200 uppercase mt-0.5">
+            {isEn ? 'Words of Love & Honor' : 'Mots d’Amour & Témoignages'}
           </h2>
           <p className="text-xs text-neutral-400 mt-0.5">
-            Forever Cherishing <span className="text-amber-200 font-semibold">{memorial.fullName}</span>
+            {isEn ? 'In loving memory of ' : 'En hommage affectueux à '}
+            <span className="text-amber-200 font-semibold">{memorial.fullName}</span>
           </p>
         </div>
 
         {/* Virtual Candle Lighting Widget */}
-        <div className="bg-gradient-to-r from-[#2B080D] via-neutral-900 to-[#2B080D] rounded-2xl p-4 border border-amber-500/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div className="bg-gradient-to-r from-amber-950/40 via-neutral-900 to-neutral-900 rounded-2xl p-4 border border-amber-500/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <div className="flex items-center space-x-3">
             <div className="relative w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center shadow-lg">
               <Flame className="w-7 h-7 text-amber-400 animate-pulse filter drop-shadow-[0_0_8px_rgba(245,215,127,0.8)]" />
@@ -107,10 +121,10 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
             </div>
             <div>
               <div className="font-cinzel text-xs font-bold text-amber-200 uppercase tracking-wider">
-                Virtual Memorial Flame
+                {isEn ? 'Virtual Memorial Flame' : 'Flamme du Souvenir Éternel'}
               </div>
               <p className="text-[11px] text-neutral-300">
-                <strong className="text-amber-300">{litCandlesCount}</strong> candles glowing in loving memory
+                <strong className="text-amber-300">{litCandlesCount}</strong> {isEn ? 'candles glowing in loving memory' : 'bougies allumées en mémoire'}
               </p>
             </div>
           </div>
@@ -118,33 +132,33 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleQuickLightCandle}
-              className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 ${
+              className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer ${
                 hasUserLitCandle
                   ? 'bg-amber-500/20 border border-amber-400 text-amber-300'
                   : 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-neutral-950'
               }`}
             >
               <Flame className="w-4 h-4 fill-current" />
-              <span>{hasUserLitCandle ? 'Candle Lit 🕯️' : 'Light a Candle'}</span>
+              <span>{hasUserLitCandle ? (isEn ? 'Candle Lit 🕯️' : 'Bougie Allumée 🕯️') : (isEn ? 'Light a Candle' : 'Allumer une bougie')}</span>
             </button>
 
             <button
               onClick={() => setIsModalOpen(true)}
-              className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 text-xs font-semibold flex items-center gap-1.5 transition-all"
+              className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <MessageSquarePlus className="w-4 h-4 text-amber-400" />
-              <span>Add Tribute</span>
+              <span>{isEn ? 'Add Tribute' : 'Déposer un hommage'}</span>
             </button>
           </div>
         </div>
 
         {/* Filter Pills */}
         <div className="flex items-center space-x-1.5 overflow-x-auto py-1 text-xs no-scrollbar">
-          {['All', 'Spouse', 'Children', 'Grandchildren', 'Church', 'Friend'].map((cat) => (
+          {filterCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                 filter === cat
                   ? 'bg-amber-500 text-neutral-950 font-bold shadow-xs'
                   : 'bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-neutral-200'
@@ -191,14 +205,14 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
               {trib.candleLit && (
                 <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-400/30 text-[10px] text-amber-300 font-medium">
                   <Flame className="w-3 h-3 text-amber-400 fill-current" />
-                  <span>Candle</span>
+                  <span>{isEn ? 'Candle' : 'Bougie'}</span>
                 </div>
               )}
             </div>
 
             {/* Tribute Text */}
-            <p className="text-xs sm:text-sm text-neutral-200 font-serif italic leading-relaxed pl-1 border-l-2 border-amber-500/30">
-              “{trib.content}”
+            <p className="text-xs sm:text-sm text-neutral-200 font-serif italic leading-relaxed pl-2 border-l-2 border-amber-500/40">
+              « {trib.content} »
             </p>
 
             {/* Date */}
@@ -223,12 +237,12 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
                 <div className="flex items-center gap-2">
                   <Heart className="w-5 h-5 text-amber-400 fill-current/30" />
                   <h3 className="font-cinzel text-base font-bold text-amber-200">
-                    Write a Tribute
+                    {isEn ? 'Write a Tribute' : 'Rédiger un Hommage'}
                   </h3>
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="p-1 rounded-lg text-neutral-400 hover:text-white"
+                  className="p-1 rounded-lg text-neutral-400 hover:text-white cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -237,12 +251,12 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
               <form onSubmit={handleSubmit} className="space-y-3 text-xs">
                 <div>
                   <label className="block text-neutral-300 font-medium mb-1">
-                    Your Full Name *
+                    {isEn ? 'Your Full Name *' : 'Votre Nom & Prénom *'}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g., Dr. Adeola Oyenuga"
+                    placeholder={isEn ? 'e.g., Dr. Samuel Mensah' : 'Ex: Dr. Samuel Mensah'}
                     value={authorName}
                     onChange={(e) => setAuthorName(e.target.value)}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-hidden focus:border-amber-400"
@@ -252,29 +266,43 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-neutral-300 font-medium mb-1">
-                      Relationship *
+                      {isEn ? 'Relationship *' : 'Lien avec le défunt *'}
                     </label>
                     <select
                       value={relationship}
-                      onChange={(e) => setRelationship(e.target.value as any)}
+                      onChange={(e) => setRelationship(e.target.value)}
                       className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-neutral-100 focus:outline-hidden focus:border-amber-400"
                     >
-                      <option value="Children">Children</option>
-                      <option value="Wife / Spouse">Wife / Spouse</option>
-                      <option value="Grandchildren">Grandchildren</option>
-                      <option value="Siblings">Siblings</option>
-                      <option value="Church & Ministry">Church & Ministry</option>
-                      <option value="Colleague / Friend">Colleague / Friend</option>
-                      <option value="Well-Wisher">Well-Wisher</option>
+                      {isEn ? (
+                        <>
+                          <option value="Children">Children</option>
+                          <option value="Wife / Spouse">Wife / Spouse</option>
+                          <option value="Grandchildren">Grandchildren</option>
+                          <option value="Siblings">Siblings</option>
+                          <option value="Church & Ministry">Church & Ministry</option>
+                          <option value="Colleague / Friend">Colleague / Friend</option>
+                          <option value="Well-Wisher">Well-Wisher</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="Enfants">Enfants</option>
+                          <option value="Épouse">Épouse / Époux</option>
+                          <option value="Petits-enfants">Petits-enfants</option>
+                          <option value="Frères & Sœurs">Frères & Sœurs</option>
+                          <option value="Église & Paroisse">Église & Paroisse</option>
+                          <option value="Amis & Collègues">Amis & Collègues</option>
+                          <option value="Proches & Famille">Proches & Famille</option>
+                        </>
+                      )}
                     </select>
                   </div>
                   <div>
                     <label className="block text-neutral-300 font-medium mb-1">
-                      Your City / Country
+                      {isEn ? 'Your City / Country' : 'Votre Ville / Pays'}
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g., Ibadan, Nigeria"
+                      placeholder={isEn ? 'e.g., Cotonou, Benin' : 'Ex: Cotonou, Bénin'}
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                       className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-hidden focus:border-amber-400"
@@ -284,12 +312,16 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
 
                 <div>
                   <label className="block text-neutral-300 font-medium mb-1">
-                    Your Heartfelt Message *
+                    {isEn ? 'Your Heartfelt Message *' : 'Votre Message de Condoléances *'}
                   </label>
                   <textarea
                     required
                     rows={4}
-                    placeholder="Share a beloved memory, prayer, or tribute to celebrate Pa Peter's glorious legacy..."
+                    placeholder={
+                      isEn
+                        ? 'Share a beloved memory, prayer, or tribute to celebrate Pa Peter’s glorious legacy...'
+                        : 'Partagez un souvenir précieux, une prière ou des mots de réconfort pour honorer la mémoire de Papa...'
+                    }
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-neutral-100 placeholder:text-neutral-600 focus:outline-hidden focus:border-amber-400"
@@ -305,7 +337,7 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
                   />
                   <span className="text-neutral-300 flex items-center gap-1">
                     <Flame className="w-3.5 h-3.5 text-amber-400 fill-current" />
-                    Light a virtual candle with this tribute
+                    {isEn ? 'Light a virtual candle with this tribute' : 'Allumer une bougie virtuelle avec cet hommage'}
                   </span>
                 </label>
 
@@ -313,16 +345,16 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-semibold"
+                    className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-semibold cursor-pointer"
                   >
-                    Cancel
+                    {isEn ? 'Cancel' : 'Annuler'}
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-neutral-950 font-bold flex items-center gap-1.5 shadow-md"
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-neutral-950 font-bold flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>Publish Tribute</span>
+                    <span>{isEn ? 'Publish Tribute' : 'Publier l’Hommage'}</span>
                   </button>
                 </div>
               </form>

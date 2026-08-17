@@ -1,69 +1,64 @@
 import React, { useState } from 'react';
-import { MemorialProfile } from '../types';
+import { FuneralProfile } from '../types';
 import {
   Share2,
   Copy,
   Check,
   QrCode,
   Printer,
-  Code,
-  Download,
-  ExternalLink,
   Sparkles,
-  Layers,
-  Image as ImageIcon
+  MessageCircle,
+  Mail,
+  Zap,
+  Lock,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface ScreenShareProps {
-  memorial: MemorialProfile;
+  memorial: FuneralProfile;
+  onOpenPayment?: () => void;
 }
 
-export const ScreenShare: React.FC<ScreenShareProps> = ({ memorial }) => {
+export const ScreenShare: React.FC<ScreenShareProps> = ({ memorial, onOpenPayment }) => {
   const [copiedLink, setCopiedLink] = useState(false);
-  const [copiedHtml, setCopiedHtml] = useState(false);
-  const [activeTab, setActiveTab] = useState<'link' | 'html' | 'print' | 'qr'>('link');
+  const [activeTab, setActiveTab] = useState<'link' | 'qr' | 'print'>('link');
 
-  // Build dynamic shareable URL with parameters
-  const currentUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'https://memorial-app.run.app';
-  
+  const isEn = memorial.language === 'en';
+
+  // Build clean dynamic shareable URL without hardcoded guest name
+  const currentUrl =
+    typeof window !== 'undefined'
+      ? window.location.origin + window.location.pathname
+      : 'https://convive-obseques.app';
+
   const dynamicParams = new URLSearchParams({
     name: memorial.fullName,
     age: String(memorial.age),
     birth: memorial.birthYear,
     pass: memorial.passingYear,
-    photo: encodeURIComponent(memorial.portraitUrl),
     theme: memorial.themeColor,
   }).toString();
 
   const shareableDynamicUrl = `${currentUrl}?${dynamicParams}`;
 
-  // Dynamic HTML Embed snippet
-  const htmlEmbedSnippet = `<div id="memorial-card-widget" style="max-width:400px;font-family:Georgia,serif;background:linear-gradient(180deg,#4A0E18,#20050A);color:#FFE4B5;border-radius:24px;border:2px solid #D4AF37;padding:24px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
-  <div style="letter-spacing:4px;font-size:11px;color:#F5D77F;text-transform:uppercase;">${memorial.headerSuperTitle}</div>
-  <h2 style="font-size:22px;color:#FFF0D0;margin:8px 0;letter-spacing:1px;">TRANSITION TO GLORY</h2>
-  <img src="${memorial.portraitUrl}" alt="${memorial.fullName}" style="width:140px;height:140px;object-fit:cover;border-radius:50%;border:3px solid #D4AF37;margin:12px auto;" />
-  <h3 style="font-size:20px;font-weight:bold;color:#FFFFFF;margin:6px 0;">${memorial.fullName}</h3>
-  <div style="font-size:12px;color:#F5D77F;letter-spacing:2px;font-weight:bold;">${memorial.birthYear} — ${memorial.passingYear} (AGED ${memorial.age} YEARS)</div>
-  <div style="border-top:1px solid rgba(212,175,55,0.3);margin-top:16px;padding-top:14px;font-size:12px;color:#FFF;">
-    <strong>${memorial.funeralService.title}</strong><br/>
-    ${memorial.funeralService.dateTime} • ${memorial.funeralService.venueName}
-  </div>
-  <a href="${shareableDynamicUrl}" target="_blank" style="display:inline-block;margin-top:14px;background:#D4AF37;color:#1A0508;padding:8px 18px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:12px;">View Full Digital Memorial</a>
-</div>`;
-
   const handleCopyLink = () => {
+    if (!memorial.isPaid && onOpenPayment) {
+      onOpenPayment();
+      return;
+    }
     navigator.clipboard.writeText(shareableDynamicUrl);
     setCopiedLink(true);
-    confetti({ particleCount: 30, spread: 60, origin: { y: 0.7 } });
+    try {
+      confetti({ particleCount: 30, spread: 60, origin: { y: 0.7 } });
+    } catch (e) {}
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
-  const handleCopyHtml = () => {
-    navigator.clipboard.writeText(htmlEmbedSnippet);
-    setCopiedHtml(true);
-    confetti({ particleCount: 30, spread: 60, origin: { y: 0.7 } });
-    setTimeout(() => setCopiedHtml(false), 2500);
+  const handleWhatsAppClick = (e: React.MouseEvent) => {
+    if (!memorial.isPaid && onOpenPayment) {
+      e.preventDefault();
+      onOpenPayment();
+    }
   };
 
   const handlePrint = () => {
@@ -71,52 +66,79 @@ export const ScreenShare: React.FC<ScreenShareProps> = ({ memorial }) => {
   };
 
   return (
-    <div className="relative w-full h-full min-h-[720px] flex flex-col justify-between overflow-y-auto bg-neutral-950 text-neutral-100 p-4 font-sans-custom select-none">
+    <div className="relative w-full flex-1 flex flex-col justify-between bg-neutral-950 text-neutral-100 p-4 font-sans-custom select-none pb-6">
       {/* Top Header */}
       <div className="relative z-10 space-y-2 pb-3 border-b border-amber-500/20 text-center">
         <span className="text-[10px] font-cinzel tracking-[0.3em] text-amber-400 font-semibold uppercase">
-          Distribution & Integration
+          {isEn ? 'Distribution & Sharing' : 'Diffusion & Partage'}
         </span>
-        <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-gold-gradient uppercase">
-          Share & Dynamic Links
+        <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-amber-200 uppercase">
+          {isEn ? 'Share Invitation' : 'Partager le Faire-part'}
         </h2>
-        <p className="text-xs text-neutral-400">
-          Share with family, generate HTML cards, or print service pamphlets.
+        <p className="text-xs text-neutral-400 max-w-sm mx-auto">
+          {isEn
+            ? 'Send the invitation to family and church members via WhatsApp, SMS, or print the church QR code.'
+            : 'Envoyez le faire-part à vos proches via WhatsApp, SMS, ou imprimez le QR Code pour le culte.'}
         </p>
 
+        {/* Payment Warning Banner if Unpaid */}
+        {!memorial.isPaid && (
+          <div className="bg-amber-950/80 border border-amber-500/50 rounded-2xl p-3 text-left flex items-start justify-between gap-3 shadow-md mt-2">
+            <div className="flex items-start gap-2.5">
+              <Zap className="w-5 h-5 text-amber-400 fill-amber-400 shrink-0 mt-0.5" />
+              <div className="text-xs space-y-0.5">
+                <h4 className="font-cinzel font-bold text-amber-200">
+                  {isEn ? '500 FCFA Payment Required' : 'Paiement de 500 FCFA Requis'}
+                </h4>
+                <p className="text-neutral-300 text-[11px] leading-relaxed">
+                  {isEn
+                    ? 'Activate your official sharing link and church QR code via FedaPay (MTN, Moov, Wave, Card).'
+                    : 'Réglez les 500 FCFA avec FedaPay (Mobile Money) pour activer la diffusion officielle et le QR Code.'}
+                </p>
+              </div>
+            </div>
+            {onOpenPayment && (
+              <button
+                onClick={onOpenPayment}
+                className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 text-neutral-950 font-bold text-xs rounded-xl shrink-0 cursor-pointer shadow active:scale-95"
+              >
+                {isEn ? 'Pay 500 F' : 'Payer 500 F'}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Tab Selection */}
-        <div className="grid grid-cols-4 gap-1 bg-neutral-900 p-1 rounded-xl border border-neutral-800 text-xs mt-3">
+        <div className="grid grid-cols-3 gap-1 bg-neutral-900 p-1 rounded-xl border border-neutral-800 text-xs mt-3">
           <button
             onClick={() => setActiveTab('link')}
-            className={`py-1.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'link' ? 'bg-amber-500 text-neutral-950 shadow' : 'text-neutral-400 hover:text-white'
+            className={`py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+              activeTab === 'link'
+                ? 'bg-amber-500 text-neutral-950 shadow font-bold'
+                : 'text-neutral-400 hover:text-white'
             }`}
           >
-            Link
+            {isEn ? 'Link & WhatsApp' : 'Lien & WhatsApp'}
           </button>
           <button
             onClick={() => setActiveTab('qr')}
-            className={`py-1.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'qr' ? 'bg-amber-500 text-neutral-950 shadow' : 'text-neutral-400 hover:text-white'
+            className={`py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+              activeTab === 'qr'
+                ? 'bg-amber-500 text-neutral-950 shadow font-bold'
+                : 'text-neutral-400 hover:text-white'
             }`}
           >
-            QR Code
-          </button>
-          <button
-            onClick={() => setActiveTab('html')}
-            className={`py-1.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'html' ? 'bg-amber-500 text-neutral-950 shadow' : 'text-neutral-400 hover:text-white'
-            }`}
-          >
-            HTML Embed
+            {isEn ? 'Church QR Code' : 'QR Code Église'}
           </button>
           <button
             onClick={() => setActiveTab('print')}
-            className={`py-1.5 rounded-lg font-semibold transition-all ${
-              activeTab === 'print' ? 'bg-amber-500 text-neutral-950 shadow' : 'text-neutral-400 hover:text-white'
+            className={`py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+              activeTab === 'print'
+                ? 'bg-amber-500 text-neutral-950 shadow font-bold'
+                : 'text-neutral-400 hover:text-white'
             }`}
           >
-            Print
+            {isEn ? 'Print / PDF' : 'Imprimer / PDF'}
           </button>
         </div>
       </div>
@@ -130,11 +152,13 @@ export const ScreenShare: React.FC<ScreenShareProps> = ({ memorial }) => {
               <div className="flex items-center gap-2">
                 <Share2 className="w-5 h-5 text-amber-400" />
                 <h3 className="font-cinzel text-sm font-bold text-amber-200">
-                  Dynamic Memorial Program Link
+                  {isEn ? 'Digital Invitation Link' : 'Lien d’Invitation Numérique'}
                 </h3>
               </div>
               <p className="text-xs text-neutral-300">
-                Anyone with this link can view the digital program, light candles, sing hymns, and read tributes on any device without installing an app.
+                {isEn
+                  ? 'All recipients can open the wax-sealed envelope with solemn requiem music, and see the full order of service.'
+                  : 'Tous les destinataires peuvent ouvrir l’enveloppe à sceau de cire avec musique nécrologique solennelle, suivre le culte, et déposer un mot de condoléance.'}
               </p>
 
               <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-xl p-2">
@@ -146,10 +170,10 @@ export const ScreenShare: React.FC<ScreenShareProps> = ({ memorial }) => {
                 />
                 <button
                   onClick={handleCopyLink}
-                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-1 shrink-0 transition-all"
+                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-1 shrink-0 transition-all cursor-pointer"
                 >
                   {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedLink ? 'Copied!' : 'Copy'}</span>
+                  <span>{copiedLink ? (isEn ? 'Copied!' : 'Copié !') : (isEn ? 'Copy' : 'Copier')}</span>
                 </button>
               </div>
             </div>
@@ -157,24 +181,37 @@ export const ScreenShare: React.FC<ScreenShareProps> = ({ memorial }) => {
             {/* Quick Share Buttons */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                  `In Loving Memory of ${memorial.fullName} (1953-2024). View the Digital Memorial Program & Order of Service: ${shareableDynamicUrl}`
-                )}`}
-                target="_blank"
+                href={
+                  memorial.isPaid
+                    ? `https://api.whatsapp.com/send?text=${encodeURIComponent(
+                        isEn
+                          ? `In Loving Memory of ${memorial.fullName} (${memorial.birthYear}-${memorial.passingYear}). View the Digital Memorial Program & Order of Service: ${shareableDynamicUrl}`
+                          : `À la mémoire pieuse de ${memorial.fullName} (${memorial.birthYear}-${memorial.passingYear}). Faire-part d’obsèques, programme & culte : ${shareableDynamicUrl}`
+                      )}`
+                    : '#'
+                }
+                onClick={handleWhatsAppClick}
+                target={memorial.isPaid ? '_blank' : undefined}
                 rel="noreferrer"
-                className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-900/40 transition-all"
+                className="p-3 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-900/50 transition-all shadow-md cursor-pointer"
               >
-                <span>Share on WhatsApp</span>
+                <MessageCircle className="w-4 h-4 text-emerald-400" />
+                <span>{isEn ? 'Share on WhatsApp' : 'Partager sur WhatsApp'}</span>
               </a>
               <a
                 href={`mailto:?subject=${encodeURIComponent(
-                  `Celebration of Life: ${memorial.fullName}`
+                  isEn
+                    ? `Celebration of Life: ${memorial.fullName}`
+                    : `Faire-part d'Obsèques: ${memorial.fullName}`
                 )}&body=${encodeURIComponent(
-                  `Please find the digital memorial program for ${memorial.fullName} at: ${shareableDynamicUrl}`
+                  isEn
+                    ? `Please find the digital memorial program for ${memorial.fullName} at: ${shareableDynamicUrl}`
+                    : `Veuillez trouver le faire-part et programme des obsèques de ${memorial.fullName} au lien suivant : ${shareableDynamicUrl}`
                 )}`}
-                className="p-3 rounded-xl bg-neutral-900 border border-neutral-700 text-neutral-200 font-semibold flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all"
+                className="p-3 rounded-xl bg-neutral-900 border border-neutral-700 text-neutral-200 font-semibold flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all cursor-pointer"
               >
-                <span>Share via Email</span>
+                <Mail className="w-4 h-4 text-amber-400" />
+                <span>{isEn ? 'Send via Email' : 'Envoyer par Email'}</span>
               </a>
             </div>
           </div>
@@ -184,16 +221,13 @@ export const ScreenShare: React.FC<ScreenShareProps> = ({ memorial }) => {
         {activeTab === 'qr' && (
           <div className="bg-neutral-900 rounded-3xl p-5 border border-amber-500/30 text-center space-y-4">
             <div className="inline-block p-4 bg-white rounded-2xl shadow-2xl border-4 border-amber-400">
-              {/* Clean SVG QR code representation */}
-              <svg viewBox="0 0 100 100" className="w-48 h-48 mx-auto fill-neutral-950">
-                {/* Visual stylized QR code pattern */}
+              <svg viewBox="0 0 100 100" className="w-44 h-44 mx-auto fill-neutral-950">
                 <rect x="5" y="5" width="28" height="28" rx="4" stroke="#000" strokeWidth="4" fill="none" />
                 <rect x="11" y="11" width="16" height="16" fill="#000" />
                 <rect x="67" y="5" width="28" height="28" rx="4" stroke="#000" strokeWidth="4" fill="none" />
                 <rect x="73" y="11" width="16" height="16" fill="#000" />
                 <rect x="5" y="67" width="28" height="28" rx="4" stroke="#000" strokeWidth="4" fill="none" />
                 <rect x="11" y="73" width="16" height="16" fill="#000" />
-                {/* Data blocks */}
                 <rect x="38" y="10" width="8" height="8" />
                 <rect x="50" y="15" width="8" height="8" />
                 <rect x="38" y="26" width="8" height="8" />
@@ -214,72 +248,47 @@ export const ScreenShare: React.FC<ScreenShareProps> = ({ memorial }) => {
 
             <div>
               <h4 className="font-cinzel text-base font-bold text-amber-200 uppercase">
-                Scan for Digital Program
+                {isEn ? 'Scan for Digital Program' : 'Scannez pour le Programme'}
               </h4>
               <p className="text-xs text-neutral-300 max-w-xs mx-auto mt-1">
-                Print this QR code on church bulletin boards or tables for attendees to access the hymnbook and order of service.
+                {isEn
+                  ? 'Print this QR code on church entrance boards so attendees can access hymns and the order of service on their phones.'
+                  : 'Placez ce QR code à l’entrée de l’église et sur les bancs pour que les fidèles suivent les cantiques et le culte.'}
               </p>
             </div>
 
             <button
               onClick={handlePrint}
-              className="px-4 py-2 rounded-xl bg-amber-500 text-neutral-950 font-bold text-xs inline-flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-md"
             >
               <Printer className="w-4 h-4" />
-              <span>Print QR Standee</span>
+              <span>{isEn ? 'Print QR Standee' : 'Imprimer le Chevalet QR'}</span>
             </button>
           </div>
         )}
 
-        {/* 3. HTML Embed Snippet */}
-        {activeTab === 'html' && (
-          <div className="bg-neutral-900 rounded-2xl p-4 border border-amber-500/30 space-y-3 text-xs">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Code className="w-4 h-4 text-amber-400" />
-                <h4 className="font-cinzel font-bold text-amber-200">
-                  Dynamic HTML Card Embed
-                </h4>
-              </div>
-              <button
-                onClick={handleCopyHtml}
-                className="px-2.5 py-1 rounded-lg bg-amber-500 text-neutral-950 font-bold text-xs flex items-center gap-1"
-              >
-                {copiedHtml ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedHtml ? 'Copied HTML!' : 'Copy Code'}</span>
-              </button>
-            </div>
-
-            <p className="text-neutral-300">
-              Paste this HTML snippet into any website, blog, or memorial portal to render an interactive memorial card dynamically linked to images.
-            </p>
-
-            <pre className="bg-neutral-950 p-3 rounded-xl border border-neutral-800 text-[10px] text-amber-300 font-mono overflow-x-auto max-h-40 whitespace-pre-wrap">
-              {htmlEmbedSnippet}
-            </pre>
-          </div>
-        )}
-
-        {/* 4. Print Ready Pamphlet */}
+        {/* 3. Print Ready Pamphlet */}
         {activeTab === 'print' && (
           <div className="bg-neutral-900 rounded-2xl p-4 border border-amber-500/30 space-y-3 text-xs">
             <div className="flex items-center gap-2">
               <Printer className="w-4 h-4 text-amber-400" />
               <h4 className="font-cinzel font-bold text-amber-200">
-                Printable Funeral Program Pamphlet
+                {isEn ? 'Printable Livret / PDF Brochure' : 'Livret d’Obsèques & Brochure PDF'}
               </h4>
             </div>
 
-            <p className="text-neutral-300">
-              Generate a clean, high-contrast, multi-page printout of the Obsequies, Order of Service, Hymns, and Tributes formatted for standard A4/US Letter brochures.
+            <p className="text-neutral-300 leading-relaxed">
+              {isEn
+                ? 'Generate a clean, high-contrast, formatted pamphlet of the Obsequies, Order of Service, Hymns, and Tributes.'
+                : 'Générez un document soigné haute définition prêt à imprimer pour la veillée et le culte d’enterrement.'}
             </p>
 
             <button
               onClick={handlePrint}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 text-neutral-950 font-bold flex items-center justify-center gap-2 shadow-lg"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 text-neutral-950 font-bold flex items-center justify-center gap-2 shadow-lg cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Print / Save as PDF Program</span>
+              <span>{isEn ? 'Print / Export to PDF' : 'Imprimer / Exporter en PDF'}</span>
             </button>
           </div>
         )}

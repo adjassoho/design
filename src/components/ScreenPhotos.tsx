@@ -51,7 +51,7 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
       : photos.filter((p) => p.category === activeCategory);
 
   return (
-    <div className="relative w-full h-full min-h-[720px] flex flex-col justify-between overflow-y-auto bg-neutral-950 text-neutral-100 p-4 font-sans-custom select-none">
+    <div className="relative w-full flex-1 flex flex-col justify-between bg-neutral-950 text-neutral-100 p-4 font-sans-custom select-none pb-6">
       {/* Header */}
       <div className="relative z-10 space-y-3 pb-3 border-b border-amber-500/20">
         <div className="flex items-center justify-between">
