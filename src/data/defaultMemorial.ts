@@ -7,14 +7,80 @@ import {
   LifeMilestone,
   GuestItem,
   FuneralThemeTemplate,
+  FuneralBackgroundTemplate,
   FuneralStep,
 } from '../types';
 
 import portraitDefault from '../assets/images/elder_portrait_1786996135067.jpg';
 import cloudsDefault from '../assets/images/heavenly_clouds_1786996146594.jpg';
 import waxSealDefault from '../assets/images/gold_wax_seal_1786996159757.jpg';
+import bgGoldenHeaven from '../assets/images/bg_golden_heaven_1787059408646.jpg';
+import bgCelestialNight from '../assets/images/bg_celestial_night_1787059419936.jpg';
+import bgPeacefulLilies from '../assets/images/bg_peaceful_lilies_1787059439533.jpg';
+import bgEmeraldDawn from '../assets/images/bg_emerald_dawn_1787059452587.jpg';
 
-export { portraitDefault, cloudsDefault, waxSealDefault };
+export {
+  portraitDefault,
+  cloudsDefault,
+  waxSealDefault,
+  bgGoldenHeaven,
+  bgCelestialNight,
+  bgPeacefulLilies,
+  bgEmeraldDawn,
+};
+
+export const defaultBackgroundTemplates: FuneralBackgroundTemplate[] = [
+  {
+    id: 'golden-heaven',
+    name: 'Aurore Céleste & Rayons Dorés',
+    nameEn: 'Golden Heavenly Dawn',
+    url: bgGoldenHeaven,
+    description: 'Rayons de lumière divine perçant les nuages dorés de l’éternité.',
+    descriptionEn: 'Divine rays of heavenly dawn breaking through golden morning clouds.',
+    tag: 'Sacré & Lumineux',
+    tagEn: 'Sacred & Radiant',
+  },
+  {
+    id: 'celestial-night',
+    name: 'Nuit Royale & Étoiles Célestes',
+    nameEn: 'Royal Celestial Night',
+    url: bgCelestialNight,
+    description: 'Bleu nuit profond avec étoiles étincelantes et halo céleste.',
+    descriptionEn: 'Deep royal blue celestial twilight with radiant peaceful starlight.',
+    tag: 'Solennel & Majestueux',
+    tagEn: 'Solemn & Majestic',
+  },
+  {
+    id: 'peaceful-lilies',
+    name: 'Lys Blancs & Paix Sacrée',
+    nameEn: 'Sacred Lilies & Light',
+    url: bgPeacefulLilies,
+    description: 'Lys blancs purs baignés d’une douce lumière céleste réconfortante.',
+    descriptionEn: 'Pure white lilies enveloped in comforting ethereal divine light.',
+    tag: 'Pureté & Consolation',
+    tagEn: 'Purity & Comfort',
+  },
+  {
+    id: 'emerald-dawn',
+    name: 'Verts Pâturages & Espérance',
+    nameEn: 'Green Pastures & Hope',
+    url: bgEmeraldDawn,
+    description: 'Atmosphère émeraude paisible inspirée du Psaume 23 et du repos éternel.',
+    descriptionEn: 'Tranquil emerald dawn reflecting Psalm 23 and peaceful eternal rest.',
+    tag: 'Espérance & Repos',
+    tagEn: 'Hope & Rest',
+  },
+  {
+    id: 'classic-clouds',
+    name: 'Nuages d’Or Classiques',
+    nameEn: 'Classic Golden Clouds',
+    url: cloudsDefault,
+    description: 'Drapé de nuages crépusculaires dorés et chauds.',
+    descriptionEn: 'Warm sunset clouds softly floating into eternal peace.',
+    tag: 'Classique & Chaleureux',
+    tagEn: 'Classic & Warm',
+  },
+];
 
 export const defaultScheduleSteps: FuneralStep[] = [
   {
@@ -159,7 +225,7 @@ export const defaultMemorial: FuneralProfile = {
   age: 71,
   sealLabel: 'ÂGÉ DE 71 ANS',
   portraitUrl: portraitDefault,
-  backgroundUrl: cloudsDefault,
+  backgroundUrl: bgGoldenHeaven,
   themeColor: 'burgundy',
   language: 'fr',
   bibleVerse: 'J’ai combattu le bon combat, j’ai achevé la course, j’ai gardé la foi. Désormais la couronne de justice m’est réservée.',
@@ -175,14 +241,16 @@ export const defaultMemorial: FuneralProfile = {
   venueLng: 3.8643,
   serviceOfSongs: {
     title: 'VEILLÉE DE PRIÈRES & CHANTS',
-    dateTime: 'Jeudi 13 Février 2025 à 17h00',
+    dateTime: 'Jeudi 27 Août 2026 à 17h00',
+    isoDateTime: '2026-08-27T17:00:00',
     venueName: 'Vine Branch Church Apata',
     address: 'Moor Plantation GRA, Ibadan',
     locationMapUrl: 'https://maps.google.com/?q=7.3824,3.8643',
   },
   funeralService: {
     title: 'CULTE D’OBSÈQUES & INHUMATION',
-    dateTime: 'Vendredi 14 Février 2025 à 10h00',
+    dateTime: 'Vendredi 28 Août 2026 à 10h00',
+    isoDateTime: '2026-08-28T10:00:00',
     lyingInState: 'Levée du corps & Recueillement : 08h30',
     serviceStartTime: 'Office religieux solennel : 10h00',
     venueName: 'Grand Temple Vine Branch Church',

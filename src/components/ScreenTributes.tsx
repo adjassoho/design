@@ -3,6 +3,7 @@ import { TributeItem, FuneralProfile } from '../types';
 import { Heart, Flame, MessageSquarePlus, Sparkles, Send, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'motion/react';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface ScreenTributesProps {
   memorial: FuneralProfile;
@@ -16,6 +17,7 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
   onAddTribute,
 }) => {
   const isEn = memorial.language === 'en';
+  const theme = getThemeStyles(memorial.themeColor);
   const [filter, setFilter] = useState<string>('Tous');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [litCandlesCount, setLitCandlesCount] = useState<number>(
@@ -98,33 +100,33 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
   return (
     <div className="relative w-full flex-1 flex flex-col justify-between bg-neutral-950 text-neutral-100 p-4 font-sans-custom select-none pb-6">
       {/* Top Banner & Candle Lighting Station */}
-      <div className="relative z-10 space-y-3 pb-3 border-b border-amber-500/20">
+      <div className={`relative z-10 space-y-3 pb-3 border-b ${theme.borderColor}`}>
         <div className="text-center">
-          <span className="text-[10px] font-cinzel tracking-[0.3em] text-amber-400 font-semibold uppercase">
+          <span className={`text-[10px] font-cinzel tracking-[0.3em] ${theme.accentText} font-semibold uppercase`}>
             {isEn ? 'Tributes & Condolence Book' : 'Livre de Condoléances & Hommages'}
           </span>
-          <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-amber-200 uppercase mt-0.5">
+          <h2 className={`font-cinzel text-xl sm:text-2xl font-bold ${theme.titleGradient} uppercase mt-0.5`}>
             {isEn ? 'Words of Love & Honor' : 'Mots d’Amour & Témoignages'}
           </h2>
           <p className="text-xs text-neutral-400 mt-0.5">
             {isEn ? 'In loving memory of ' : 'En hommage affectueux à '}
-            <span className="text-amber-200 font-semibold">{memorial.fullName}</span>
+            <span className={`font-semibold ${theme.accentLightText}`}>{memorial.fullName}</span>
           </p>
         </div>
 
         {/* Virtual Candle Lighting Widget */}
-        <div className="bg-gradient-to-r from-amber-950/40 via-neutral-900 to-neutral-900 rounded-2xl p-4 border border-amber-500/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div className={`bg-gradient-to-r ${theme.cardGradient} rounded-2xl p-4 border ${theme.borderColor} shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left`}>
           <div className="flex items-center space-x-3">
-            <div className="relative w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center shadow-lg">
-              <Flame className="w-7 h-7 text-amber-400 animate-pulse filter drop-shadow-[0_0_8px_rgba(245,215,127,0.8)]" />
+            <div className={`relative w-12 h-12 rounded-2xl ${theme.badgeBg} flex items-center justify-center shadow-lg`}>
+              <Flame className={`w-7 h-7 ${theme.accentText} animate-pulse filter drop-shadow-[0_0_8px_rgba(245,215,127,0.8)]`} />
               <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-300 animate-ping" />
             </div>
             <div>
-              <div className="font-cinzel text-xs font-bold text-amber-200 uppercase tracking-wider">
+              <div className={`font-cinzel text-xs font-bold ${theme.accentLightText} uppercase tracking-wider`}>
                 {isEn ? 'Virtual Memorial Flame' : 'Flamme du Souvenir Éternel'}
               </div>
               <p className="text-[11px] text-neutral-300">
-                <strong className="text-amber-300">{litCandlesCount}</strong> {isEn ? 'candles glowing in loving memory' : 'bougies allumées en mémoire'}
+                <strong className={theme.accentText}>{litCandlesCount}</strong> {isEn ? 'candles glowing in loving memory' : 'bougies allumées en mémoire'}
               </p>
             </div>
           </div>
@@ -134,8 +136,8 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
               onClick={handleQuickLightCandle}
               className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer ${
                 hasUserLitCandle
-                  ? 'bg-amber-500/20 border border-amber-400 text-amber-300'
-                  : 'bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-neutral-950'
+                  ? `${theme.badgeBg}`
+                  : `bg-gradient-to-r ${theme.buttonGradient} text-neutral-950`
               }`}
             >
               <Flame className="w-4 h-4 fill-current" />
@@ -144,9 +146,9 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
 
             <button
               onClick={() => setIsModalOpen(true)}
-              className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+              className={`px-3 py-2 rounded-xl ${theme.secondaryBtn} text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer`}
             >
-              <MessageSquarePlus className="w-4 h-4 text-amber-400" />
+              <MessageSquarePlus className="w-4 h-4" />
               <span>{isEn ? 'Add Tribute' : 'Déposer un hommage'}</span>
             </button>
           </div>
@@ -160,7 +162,7 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
               onClick={() => setFilter(cat)}
               className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                 filter === cat
-                  ? 'bg-amber-500 text-neutral-950 font-bold shadow-xs'
+                  ? `bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold shadow-xs`
                   : 'bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-neutral-200'
               }`}
             >
@@ -178,20 +180,20 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.05 }}
-            className="bg-neutral-900/90 rounded-2xl p-4 border border-neutral-800 hover:border-amber-500/40 shadow-lg space-y-2.5 transition-all"
+            className={`bg-neutral-900/90 rounded-2xl p-4 border border-neutral-800 hover:${theme.borderColor} shadow-lg space-y-2.5 transition-all`}
           >
             {/* Header: Author, Badge, Candle */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-cinzel font-bold text-xs flex items-center justify-center">
+                <div className={`w-8 h-8 rounded-full ${theme.badgeBg} font-cinzel font-bold text-xs flex items-center justify-center`}>
                   {trib.author.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-cinzel text-xs sm:text-sm font-bold text-amber-200">
+                  <h4 className="font-cinzel text-xs sm:text-sm font-bold text-neutral-100">
                     {trib.author}
                   </h4>
                   <div className="flex items-center gap-1.5 text-[10px] text-neutral-400">
-                    <span className="text-amber-400/90 font-medium">{trib.relationship}</span>
+                    <span className={`${theme.accentLightText} font-medium`}>{trib.relationship}</span>
                     {trib.location && (
                       <>
                         <span>•</span>
@@ -203,15 +205,15 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
               </div>
 
               {trib.candleLit && (
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-400/30 text-[10px] text-amber-300 font-medium">
-                  <Flame className="w-3 h-3 text-amber-400 fill-current" />
+                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${theme.badgeBg} text-[10px] font-medium`}>
+                  <Flame className={`w-3 h-3 ${theme.accentText} fill-current`} />
                   <span>{isEn ? 'Candle' : 'Bougie'}</span>
                 </div>
               )}
             </div>
 
             {/* Tribute Text */}
-            <p className="text-xs sm:text-sm text-neutral-200 font-serif italic leading-relaxed pl-2 border-l-2 border-amber-500/40">
+            <p className={`text-xs sm:text-sm text-neutral-200 font-serif italic leading-relaxed pl-2 border-l-2 ${theme.borderColor}`}>
               « {trib.content} »
             </p>
 
@@ -231,12 +233,12 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-neutral-900 border border-amber-500/40 rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4"
+              className={`bg-neutral-900 border ${theme.borderColor} rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4`}
             >
               <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
                 <div className="flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-amber-400 fill-current/30" />
-                  <h3 className="font-cinzel text-base font-bold text-amber-200">
+                  <Heart className={`w-5 h-5 ${theme.accentText} fill-current/30`} />
+                  <h3 className={`font-cinzel text-base font-bold ${theme.accentLightText}`}>
                     {isEn ? 'Write a Tribute' : 'Rédiger un Hommage'}
                   </h3>
                 </div>
@@ -306,7 +308,8 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                       className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-hidden focus:border-amber-400"
-                    />
+                    >
+                    </input>
                   </div>
                 </div>
 
@@ -336,7 +339,7 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
                     className="rounded-xs text-amber-500 focus:ring-amber-400"
                   />
                   <span className="text-neutral-300 flex items-center gap-1">
-                    <Flame className="w-3.5 h-3.5 text-amber-400 fill-current" />
+                    <Flame className={`w-3.5 h-3.5 ${theme.accentText} fill-current`} />
                     {isEn ? 'Light a virtual candle with this tribute' : 'Allumer une bougie virtuelle avec cet hommage'}
                   </span>
                 </label>
@@ -351,7 +354,7 @@ export const ScreenTributes: React.FC<ScreenTributesProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-neutral-950 font-bold flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"
+                    className={`px-5 py-2 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95`}
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{isEn ? 'Publish Tribute' : 'Publier l’Hommage'}</span>

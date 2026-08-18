@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { PhotoMemory, MemorialProfile } from '../types';
+import { PhotoMemory, FuneralProfile } from '../types';
 import { Image as ImageIcon, Plus, X, ZoomIn, Sparkles, ExternalLink, Link2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface ScreenPhotosProps {
-  memorial: MemorialProfile;
+  memorial: FuneralProfile;
   photos: PhotoMemory[];
   onAddPhoto: (photo: PhotoMemory) => void;
 }
@@ -14,6 +15,8 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
   photos,
   onAddPhoto,
 }) => {
+  const isEn = memorial.language === 'en';
+  const theme = getThemeStyles(memorial.themeColor);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoMemory | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -31,8 +34,8 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
 
     const item: PhotoMemory = {
       id: `photo-${Date.now()}`,
-      title: newTitle.trim() || 'Cherished Memory',
-      caption: newCaption.trim() || 'Celebration of a blessed life.',
+      title: newTitle.trim() || (isEn ? 'Cherished Memory' : 'Précieux Souvenir'),
+      caption: newCaption.trim() || (isEn ? 'Celebration of a blessed life.' : 'Célébration d’une vie bénie.'),
       category: newCategory,
       year: newYear.trim() || undefined,
       imageUrl: newUrl.trim(),
@@ -45,42 +48,52 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
     setIsAddModalOpen(false);
   };
 
+  const categories = isEn
+    ? ['All', 'Celebration', 'Family', 'Service & Faith', 'Youth & Milestones']
+    : ['Tous', 'Célébration', 'Famille', 'Foi & Église', 'Jeunesse & Étapes'];
+
   const filteredPhotos =
-    activeCategory === 'All'
+    activeCategory === 'All' || activeCategory === 'Tous'
       ? photos
-      : photos.filter((p) => p.category === activeCategory);
+      : photos.filter((p) => {
+          if (activeCategory === 'Celebration' || activeCategory === 'Célébration') return p.category === 'Celebration';
+          if (activeCategory === 'Family' || activeCategory === 'Famille') return p.category === 'Family';
+          if (activeCategory === 'Service & Faith' || activeCategory === 'Foi & Église') return p.category === 'Service & Faith';
+          if (activeCategory === 'Youth & Milestones' || activeCategory === 'Jeunesse & Étapes') return p.category === 'Youth & Milestones';
+          return true;
+        });
 
   return (
     <div className="relative w-full flex-1 flex flex-col justify-between bg-neutral-950 text-neutral-100 p-4 font-sans-custom select-none pb-6">
       {/* Header */}
-      <div className="relative z-10 space-y-3 pb-3 border-b border-amber-500/20">
+      <div className={`relative z-10 space-y-3 pb-3 border-b ${theme.borderColor}`}>
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-cinzel tracking-[0.3em] text-amber-400 font-semibold uppercase">
-              Photo & Memory Gallery
+            <span className={`text-[10px] font-cinzel tracking-[0.3em] ${theme.accentText} font-semibold uppercase`}>
+              {isEn ? 'Photo & Memory Gallery' : 'Galerie Photos & Souvenirs'}
             </span>
-            <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-gold-gradient uppercase mt-0.5">
-              Celebration of Life
+            <h2 className={`font-cinzel text-xl sm:text-2xl font-bold ${theme.titleGradient} uppercase mt-0.5`}>
+              {isEn ? 'Celebration of Life' : 'Instants Précieux de Vie'}
             </h2>
           </div>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-1 shadow transition-all active:scale-95"
+            className={`px-3 py-1.5 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold text-xs flex items-center gap-1 shadow transition-all active:scale-95 cursor-pointer`}
           >
             <Plus className="w-4 h-4" />
-            <span>Add Photo</span>
+            <span>{isEn ? 'Add Photo' : 'Ajouter Photo'}</span>
           </button>
         </div>
 
         {/* Categories */}
         <div className="flex items-center space-x-1.5 overflow-x-auto py-1 text-xs no-scrollbar">
-          {['All', 'Celebration', 'Family', 'Service & Faith', 'Youth & Milestones'].map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                 activeCategory === cat
-                  ? 'bg-amber-500 text-neutral-950 font-bold shadow-xs'
+                  ? `bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold shadow-xs`
                   : 'bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-neutral-200'
               }`}
             >
@@ -100,7 +113,7 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.05 }}
               onClick={() => setSelectedPhoto(item)}
-              className="group relative rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-800 hover:border-amber-500/50 shadow-lg cursor-pointer aspect-4/5"
+              className={`group relative rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-800 hover:${theme.borderColor} shadow-lg cursor-pointer aspect-4/5`}
             >
               <img
                 src={item.imageUrl}
@@ -112,7 +125,7 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
 
               <div className="absolute inset-x-0 bottom-0 p-2.5 text-xs">
                 {item.year && (
-                  <span className="text-[10px] text-amber-300 font-cinzel font-bold">
+                  <span className={`text-[10px] ${theme.accentLightText} font-cinzel font-bold`}>
                     {item.year}
                   </span>
                 )}
@@ -124,7 +137,7 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
                 </p>
               </div>
 
-              <div className="absolute top-2 right-2 p-1 rounded-full bg-neutral-900/60 text-amber-300 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className={`absolute top-2 right-2 p-1 rounded-full bg-neutral-900/60 ${theme.accentText} opacity-0 group-hover:opacity-100 transition-opacity`}>
                 <ZoomIn className="w-3.5 h-3.5" />
               </div>
             </motion.div>
@@ -140,11 +153,11 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="relative max-w-lg w-full bg-neutral-900 border border-amber-500/40 rounded-3xl overflow-hidden shadow-2xl space-y-3"
+              className={`relative max-w-lg w-full bg-neutral-900 border ${theme.borderColor} rounded-3xl overflow-hidden shadow-2xl space-y-3`}
             >
               <button
                 onClick={() => setSelectedPhoto(null)}
-                className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-neutral-950/80 text-neutral-300 hover:text-white"
+                className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-neutral-950/80 text-neutral-300 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -160,11 +173,11 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
 
               <div className="p-4 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-amber-400 font-cinzel font-bold">
+                  <span className={`text-xs ${theme.accentText} font-cinzel font-bold`}>
                     {selectedPhoto.category} {selectedPhoto.year && `• ${selectedPhoto.year}`}
                   </span>
                 </div>
-                <h3 className="font-cinzel text-base sm:text-lg font-bold text-amber-100">
+                <h3 className={`font-cinzel text-base sm:text-lg font-bold ${theme.accentLightText}`}>
                   {selectedPhoto.title}
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-300 font-serif italic">
@@ -184,18 +197,18 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-neutral-900 border border-amber-500/40 rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4 text-xs"
+              className={`bg-neutral-900 border ${theme.borderColor} rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4 text-xs`}
             >
               <div className="flex items-center justify-between border-b border-neutral-800 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Link2 className="w-5 h-5 text-amber-400" />
-                  <h3 className="font-cinzel text-base font-bold text-amber-200">
-                    Add Photo by Dynamic URL
+                  <Link2 className={`w-5 h-5 ${theme.accentText}`} />
+                  <h3 className={`font-cinzel text-base font-bold ${theme.accentLightText}`}>
+                    {isEn ? 'Add Photo by Dynamic URL' : 'Ajouter une Photo via Lien URL'}
                   </h3>
                 </div>
                 <button
                   onClick={() => setIsAddModalOpen(false)}
-                  className="p-1 rounded-lg text-neutral-400 hover:text-white"
+                  className="p-1 rounded-lg text-neutral-400 hover:text-white cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -204,28 +217,30 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
               <form onSubmit={handleAddPhotoSubmit} className="space-y-3">
                 <div>
                   <label className="block text-neutral-300 font-medium mb-1">
-                    Image URL or Data URL *
+                    {isEn ? 'Image URL or Data URL *' : 'URL de l’image ou Lien Web *'}
                   </label>
                   <input
                     type="url"
                     required
-                    placeholder="https://images.unsplash.com/... or any photo link"
+                    placeholder={isEn ? "https://images.unsplash.com/... or any photo link" : "https://... ou lien image"}
                     value={newUrl}
                     onChange={(e) => setNewUrl(e.target.value)}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-hidden focus:border-amber-400 font-mono text-[11px]"
                   />
                   <p className="text-[10px] text-neutral-400 mt-1">
-                    Supports HTTPS image links, Unsplash URLs, or uploaded image URLs.
+                    {isEn
+                      ? 'Supports HTTPS image links, Unsplash URLs, or uploaded image URLs.'
+                      : 'Compatible avec les liens HTTPS, Unsplash ou hébergements d’images.'}
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-neutral-300 font-medium mb-1">
-                    Title / Subject
+                    {isEn ? 'Title / Subject' : 'Titre / Sujet'}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g., Thanksgiving Service with Family"
+                    placeholder={isEn ? "e.g., Thanksgiving Service with Family" : "Ex: Messe d’action de grâce en famille"}
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-neutral-100 focus:outline-hidden focus:border-amber-400"
@@ -235,22 +250,22 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-neutral-300 font-medium mb-1">
-                      Category
+                      {isEn ? 'Category' : 'Catégorie'}
                     </label>
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value as any)}
                       className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-neutral-100 focus:outline-hidden focus:border-amber-400"
                     >
-                      <option value="Celebration">Celebration</option>
-                      <option value="Family">Family</option>
-                      <option value="Service & Faith">Service & Faith</option>
-                      <option value="Youth & Milestones">Youth & Milestones</option>
+                      <option value="Celebration">{isEn ? 'Celebration' : 'Célébration'}</option>
+                      <option value="Family">{isEn ? 'Family' : 'Famille'}</option>
+                      <option value="Service & Faith">{isEn ? 'Service & Faith' : 'Foi & Église'}</option>
+                      <option value="Youth & Milestones">{isEn ? 'Youth & Milestones' : 'Jeunesse & Étapes'}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-neutral-300 font-medium mb-1">
-                      Year
+                      {isEn ? 'Year' : 'Année'}
                     </label>
                     <input
                       type="text"
@@ -258,18 +273,17 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
                       value={newYear}
                       onChange={(e) => setNewYear(e.target.value)}
                       className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-neutral-100 focus:outline-hidden focus:border-amber-400"
-                    >
-                    </input>
+                    />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-neutral-300 font-medium mb-1">
-                    Memory Caption
+                    {isEn ? 'Memory Caption' : 'Légende & Souvenir'}
                   </label>
                   <textarea
                     rows={2}
-                    placeholder="Brief caption or memory describing this photo..."
+                    placeholder={isEn ? "Brief caption or memory describing this photo..." : "Brève description ou souvenir lié à cette photo..."}
                     value={newCaption}
                     onChange={(e) => setNewCaption(e.target.value)}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-2.5 text-neutral-100 placeholder:text-neutral-600 focus:outline-hidden focus:border-amber-400"
@@ -280,15 +294,15 @@ export const ScreenPhotos: React.FC<ScreenPhotosProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-semibold"
+                    className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-semibold cursor-pointer"
                   >
-                    Cancel
+                    {isEn ? 'Cancel' : 'Annuler'}
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-neutral-950 font-bold"
+                    className={`px-5 py-2 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold cursor-pointer`}
                   >
-                    Save Photo
+                    {isEn ? 'Save Photo' : 'Enregistrer'}
                   </button>
                 </div>
               </form>

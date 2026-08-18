@@ -9,6 +9,8 @@ import {
   Music,
   UserCheck,
 } from 'lucide-react';
+import { ThemeColor } from '../types';
+import { getThemeStyles } from '../utils/themeStyles';
 
 export type TabType =
   | 'program'
@@ -28,6 +30,7 @@ interface NavigationBottomProps {
   isPaid?: boolean;
   isGuestMode?: boolean;
   language?: 'fr' | 'en';
+  themeColor?: ThemeColor;
 }
 
 export const NavigationBottom: React.FC<NavigationBottomProps> = ({
@@ -36,7 +39,10 @@ export const NavigationBottom: React.FC<NavigationBottomProps> = ({
   tributesCount = 5,
   isGuestMode = false,
   language = 'fr',
+  themeColor,
 }) => {
+  const theme = getThemeStyles(themeColor);
+
   // Navigation tabs for Guest Mode vs Organizer Mode
   const guestNavItems: { id: TabType; labelFr: string; labelEn: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'program', labelFr: 'Programme', labelEn: 'Program', icon: Layers },
@@ -62,7 +68,7 @@ export const NavigationBottom: React.FC<NavigationBottomProps> = ({
     <nav
       id="memorial-bottom-navigation"
       aria-label="Memorial Navigation"
-      className="sticky bottom-0 z-40 w-full bg-neutral-950/95 backdrop-blur-md border-t border-amber-500/25 px-1 pt-1.5 pb-2 shadow-2xl safe-area-pb"
+      className={`sticky bottom-0 z-40 w-full bg-neutral-950/95 backdrop-blur-md border-t ${theme.borderColor} px-1 pt-1.5 pb-2 shadow-2xl safe-area-pb`}
     >
       <div className="grid grid-cols-6 gap-1 items-center max-w-lg mx-auto">
         {activeItems.map((item) => {
@@ -77,14 +83,14 @@ export const NavigationBottom: React.FC<NavigationBottomProps> = ({
               onClick={() => onSelectTab(item.id)}
               className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition-all cursor-pointer select-none relative ${
                 isActive
-                  ? 'text-amber-300 font-bold'
+                  ? `${theme.accentLightText} font-bold`
                   : 'text-neutral-400 hover:text-neutral-200'
               }`}
             >
               <div
                 className={`p-1.5 rounded-xl transition-all ${
                   isActive
-                    ? 'bg-amber-500/20 text-amber-300 shadow-inner'
+                    ? `${theme.badgeBg} shadow-inner`
                     : 'hover:bg-neutral-900'
                 }`}
               >
@@ -96,7 +102,7 @@ export const NavigationBottom: React.FC<NavigationBottomProps> = ({
 
               {/* Tributes Counter Badge */}
               {item.id === 'tributes' && tributesCount > 0 && (
-                <span className="absolute top-0 right-1 sm:right-2 w-3.5 h-3.5 bg-amber-600 text-[8px] font-bold text-white rounded-full flex items-center justify-center shadow">
+                <span className={`absolute top-0 right-1 sm:right-2 w-3.5 h-3.5 ${theme.buttonGradient} text-[8px] font-bold text-neutral-950 rounded-full flex items-center justify-center shadow`}>
                   {tributesCount}
                 </span>
               )}

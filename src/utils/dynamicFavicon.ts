@@ -1,25 +1,51 @@
 /**
- * Utility to dynamically update the browser favicon, touch icon, and page title
- * based on the uploaded deceased portrait photo and profile details.
+ * Utility to dynamically update the browser favicon, touch icon, OpenGraph,
+ * and Twitter preview meta tags based on the uploaded deceased portrait photo and profile details.
  */
 
 export function updateDynamicFaviconAndMeta(
   imageUrl: string | undefined,
-  fullName?: string
+  fullName?: string,
+  lifeYears?: string
 ) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  // 1. Update Document Title
-  const titleText = fullName ? `Faire-part • ${fullName}` : 'Faire-part';
+  // 1. Update Document Title & OpenGraph Title
+  const titleText = fullName ? `Faire-part • ${fullName}` : 'Faire-part d’Obsèques';
   document.title = titleText;
 
-  // Update meta tags if present
-  const metaTitle = document.querySelector('meta[property="og:title"]');
-  if (metaTitle) metaTitle.setAttribute('content', titleText);
+  const descText = fullName
+    ? `À la mémoire de ${fullName}${lifeYears ? ` (${lifeYears})` : ''} — Faire-part d'obsèques officiel et programme de célébration.`
+    : `Faire-part officiel d'obsèques, programme du culte, hommages et recueillement.`;
+
+  const setMeta = (attr: 'property' | 'name', key: string, value: string) => {
+    let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement;
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute(attr, key);
+      document.head.appendChild(el);
+    }
+    el.content = value;
+  };
+
+  // Open Graph metadata for WhatsApp, Facebook, LinkedIn
+  setMeta('property', 'og:title', titleText);
+  setMeta('property', 'og:description', descText);
+  setMeta('property', 'og:type', 'website');
+
+  // Twitter Cards
+  setMeta('name', 'twitter:title', titleText);
+  setMeta('name', 'twitter:description', descText);
+  setMeta('name', 'twitter:card', 'summary_large_image');
 
   if (!imageUrl) return;
 
-  const updateLinks = (faviconHref: string) => {
+  // Update raw image URL for Open Graph crawlers (WhatsApp needs standard HTTP/HTTPS or data URL)
+  setMeta('property', 'og:image', imageUrl);
+  setMeta('property', 'og:image:secure_url', imageUrl);
+  setMeta('name', 'twitter:image', imageUrl);
+
+  const updateFaviconLinks = (faviconHref: string) => {
     // 1. Standard icon
     let iconLink = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
     if (!iconLink) {
@@ -47,18 +73,9 @@ export function updateDynamicFaviconAndMeta(
       document.head.appendChild(appleTouchLink);
     }
     appleTouchLink.href = faviconHref;
-
-    // 4. Update og:image meta tag
-    let ogImageMeta = document.querySelector('meta[property="og:image"]') as HTMLMetaElement;
-    if (!ogImageMeta) {
-      ogImageMeta = document.createElement('meta');
-      ogImageMeta.setAttribute('property', 'og:image');
-      document.head.appendChild(ogImageMeta);
-    }
-    ogImageMeta.content = faviconHref;
   };
 
-  // If already a direct data URL or image, create a circular badge with gold rim
+  // Create a circular gold-bordered favicon badge
   try {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -70,7 +87,7 @@ export function updateDynamicFaviconAndMeta(
         canvas.height = size;
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-          updateLinks(imageUrl);
+          updateFaviconLinks(imageUrl);
           return;
         }
 
@@ -107,19 +124,18 @@ export function updateDynamicFaviconAndMeta(
         ctx.stroke();
 
         const badgeDataUrl = canvas.toDataURL('image/png');
-        updateLinks(badgeDataUrl);
+        updateFaviconLinks(badgeDataUrl);
       } catch (canvasErr) {
-        // Fallback to raw image URL if canvas security blocks cross-origin
-        updateLinks(imageUrl);
+        updateFaviconLinks(imageUrl);
       }
     };
 
     img.onerror = () => {
-      updateLinks(imageUrl);
+      updateFaviconLinks(imageUrl);
     };
 
     img.src = imageUrl;
   } catch (err) {
-    updateLinks(imageUrl);
+    updateFaviconLinks(imageUrl);
   }
 }

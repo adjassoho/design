@@ -103,8 +103,12 @@ export default function App() {
 
   // Dynamically update Favicon with uploaded photo and Page title to Faire-part
   useEffect(() => {
-    updateDynamicFaviconAndMeta(memorial.portraitUrl, memorial.fullName);
-  }, [memorial.portraitUrl, memorial.fullName]);
+    updateDynamicFaviconAndMeta(
+      memorial.portraitUrl,
+      memorial.fullName,
+      `${memorial.birthYear}-${memorial.passingYear}`
+    );
+  }, [memorial.portraitUrl, memorial.fullName, memorial.birthYear, memorial.passingYear]);
 
   // Auto-save to localStorage
   useEffect(() => {
@@ -131,29 +135,10 @@ export default function App() {
     }
   }, [photos]);
 
-  // Periodic Reminder Popup for the 500 FCFA FedaPay payment before sharing
+  // Optional FedaPay status check without intrusive popup timers
   useEffect(() => {
-    if (memorial.isPaid || isGuestMode) return;
-
-    // First reminder after 20 seconds of editing
-    const initialTimer = setTimeout(() => {
-      if (!memorial.isPaid && !isGuestMode) {
-        setIsReminderOpen(true);
-      }
-    }, 20000);
-
-    // Periodic reminder every 75 seconds
-    const intervalTimer = setInterval(() => {
-      if (!memorial.isPaid && !isGuestMode) {
-        setIsReminderOpen(true);
-      }
-    }, 75000);
-
-    return () => {
-      clearTimeout(initialTimer);
-      clearInterval(intervalTimer);
-    };
-  }, [memorial.isPaid, isGuestMode]);
+    // Intrusive popup timers disabled per user request
+  }, []);
 
   // Check URL parameters on mount
   useEffect(() => {
@@ -405,6 +390,7 @@ export default function App() {
 
   return (
     <PhoneContainer
+      themeColor={memorial.themeColor}
       onOpenCustomizer={() => setIsCustomizerOpen(true)}
       onNewMemorial={() => setIsCustomizerOpen(true)}
       onOpenPayment={() => setIsPaymentModalOpen(true)}
@@ -428,6 +414,7 @@ export default function App() {
           isCollective={isCollectiveGuest || !activeGuest}
           onOpenEnvelope={handleOpenEnvelope}
           language={memorial.language || 'fr'}
+          themeColor={memorial.themeColor}
         />
       ) : (
         <div className="w-full flex-1 relative flex flex-col justify-between">
@@ -480,6 +467,8 @@ export default function App() {
               initialHymnId={selectedHymnRef}
               isAudioPlaying={isAudioPlaying}
               onToggleAudio={handleToggleAudio}
+              themeColor={memorial.themeColor}
+              language={memorial.language || 'fr'}
             />
           )}
 
@@ -515,6 +504,7 @@ export default function App() {
             isPaid={memorial.isPaid}
             isGuestMode={isGuestMode}
             language={memorial.language || 'fr'}
+            themeColor={memorial.themeColor}
           />
         </div>
       )}
@@ -523,8 +513,11 @@ export default function App() {
       <FedaPayCheckoutModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
-        memorial={memorial}
+        cardId={memorial.id}
+        deceasedName={memorial.fullName}
         onPaymentSuccess={handlePaymentSuccess}
+        themeColor={memorial.themeColor}
+        language={memorial.language || 'fr'}
       />
 
       {/* Periodic 500 FCFA Payment Reminder Popup */}
@@ -533,6 +526,7 @@ export default function App() {
         onClose={() => setIsReminderOpen(false)}
         onOpenPayment={() => setIsPaymentModalOpen(true)}
         language={memorial.language || 'fr'}
+        themeColor={memorial.themeColor}
       />
 
       {/* Guest RSVP & Condolences Modal */}
@@ -543,6 +537,7 @@ export default function App() {
         deceasedName={memorial.fullName}
         isCollective={isCollectiveGuest}
         onSubmitRsvp={handleRsvpSubmission}
+        themeColor={memorial.themeColor}
       />
 
       {/* Program Customizer Modal */}

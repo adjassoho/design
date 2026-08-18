@@ -9,6 +9,7 @@ import {
 import {
   defaultMilestones,
   defaultOrderOfService,
+  defaultBackgroundTemplates,
 } from '../data/defaultMemorial';
 import {
   Sliders,
@@ -32,8 +33,10 @@ import {
   FileText,
   Church,
   Phone,
+  ImageIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface ProgramCustomizerModalProps {
   isOpen: boolean;
@@ -60,7 +63,13 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
   onReset,
 }) => {
   const [activeTab, setActiveTab] = useState<CustomizerTab>('identity');
-  const [formData, setFormData] = useState<FuneralProfile>(() => ({
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isUploadingBackground, setIsUploadingBackground] = useState(false);
+  const theme = getThemeStyles(memorial.themeColor);
+
+  if (!isOpen) return null;
+
+  const formData: FuneralProfile = {
     ...memorial,
     language: memorial.language || 'fr',
     milestones: memorial.milestones && memorial.milestones.length > 0 ? memorial.milestones : defaultMilestones,
@@ -78,21 +87,22 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
       faithTitle: 'Foi en Christ & Héritage Familial',
       faithText: 'Par-dessus tout, Papa chérissait sa marche quotidienne avec le Seigneur et l’amour inconditionnel de sa famille.',
     },
-  }));
+  };
 
-  if (!isOpen) return null;
+  // Real-time state update helper that propagates changes directly to parent memorial
+  const updateFormData = (updater: Partial<FuneralProfile> | ((prev: FuneralProfile) => FuneralProfile)) => {
+    const next = typeof updater === 'function' ? updater(formData) : { ...formData, ...updater };
+    onSave(next);
+  };
 
   const handleApply = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
     onClose();
   };
 
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-
   const handleLanguageChange = (lang: 'fr' | 'en') => {
     if (lang === 'en') {
-      setFormData((prev) => ({
+      updateFormData((prev) => ({
         ...prev,
         language: 'en',
         headerSuperTitle: "H E A V E N ' S   G A I N",
@@ -111,7 +121,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
         intermentNote: 'Private interment in the family cemetery immediately following the church service.',
       }));
     } else {
-      setFormData((prev) => ({
+      updateFormData((prev) => ({
         ...prev,
         language: 'fr',
         headerSuperTitle: 'R E P O S   É T E R N E L',
@@ -140,8 +150,8 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
       reader.onload = async (event) => {
         if (event.target?.result) {
           const base64 = event.target.result as string;
-          // Set preview immediately for fast user feedback
-          setFormData((prev) => ({
+          // Set preview immediately for fast real-time user feedback
+          updateFormData((prev) => ({
             ...prev,
             portraitUrl: base64,
           }));
@@ -164,7 +174,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                   (typeof window !== 'undefined'
                     ? `${window.location.origin}${data.url}`
                     : data.url);
-                setFormData((prev) => ({
+                updateFormData((prev) => ({
                   ...prev,
                   portraitUrl: finalUrl,
                 }));
@@ -181,6 +191,53 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
     }
   };
 
+  const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIsUploadingBackground(true);
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        if (event.target?.result) {
+          const base64 = event.target.result as string;
+          updateFormData((prev) => ({
+            ...prev,
+            backgroundUrl: base64,
+          }));
+
+          try {
+            const res = await fetch('/api/upload-portrait', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                imageBase64: base64,
+                mimeType: file.type || 'image/jpeg',
+              }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.fullUrl || data.url) {
+                const finalUrl =
+                  data.fullUrl ||
+                  (typeof window !== 'undefined'
+                    ? `${window.location.origin}${data.url}`
+                    : data.url);
+                updateFormData((prev) => ({
+                  ...prev,
+                  backgroundUrl: finalUrl,
+                }));
+              }
+            }
+          } catch (err) {
+            console.warn('Fallback: arrière-plan conservé localement', err);
+          } finally {
+            setIsUploadingBackground(false);
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Milestones handlers
   const handleAddMilestone = () => {
     const newMs: LifeMilestone = {
@@ -188,14 +245,14 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
       title: 'Nouvelle étape',
       description: 'Description de cette période de vie...',
     };
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       ...prev,
       milestones: [...(prev.milestones || []), newMs],
     }));
   };
 
   const handleUpdateMilestone = (index: number, field: keyof LifeMilestone, value: string) => {
-    setFormData((prev) => {
+    updateFormData((prev) => {
       const list = [...(prev.milestones || [])];
       list[index] = { ...list[index], [field]: value };
       return { ...prev, milestones: list };
@@ -203,7 +260,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
   };
 
   const handleDeleteMilestone = (index: number) => {
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       ...prev,
       milestones: (prev.milestones || []).filter((_, i) => i !== index),
     }));
@@ -220,14 +277,14 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
       conductedBy: 'Officiant / Chorale',
       timeEstimate: '10:00 - 10:15',
     };
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       ...prev,
       orderOfService: [...(prev.orderOfService || []), newItem],
     }));
   };
 
   const handleUpdateOrderItem = (index: number, field: keyof OrderOfServiceItem, value: any) => {
-    setFormData((prev) => {
+    updateFormData((prev) => {
       const list = [...(prev.orderOfService || [])];
       list[index] = { ...list[index], [field]: value };
       return { ...prev, orderOfService: list };
@@ -235,7 +292,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
   };
 
   const handleDeleteOrderItem = (index: number) => {
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       ...prev,
       orderOfService: (prev.orderOfService || []).filter((_, i) => i !== index),
     }));
@@ -249,14 +306,14 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
       phone: '+229 00 00 00 00',
       role: 'Membre de la famille',
     };
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       ...prev,
       familyContacts: [...(prev.familyContacts || []), newContact],
     }));
   };
 
   const handleUpdateContact = (index: number, field: keyof FamilyContact, value: string) => {
-    setFormData((prev) => {
+    updateFormData((prev) => {
       const list = [...(prev.familyContacts || [])];
       list[index] = { ...list[index], [field]: value };
       return { ...prev, familyContacts: list };
@@ -264,7 +321,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
   };
 
   const handleDeleteContact = (index: number) => {
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       ...prev,
       familyContacts: (prev.familyContacts || []).filter((_, i) => i !== index),
     }));
@@ -284,16 +341,16 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
         initial={{ opacity: 0, scale: 0.96, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 15 }}
-        className="bg-neutral-950 border border-amber-500/40 rounded-3xl p-4 sm:p-6 w-full max-w-3xl shadow-2xl space-y-4 max-h-[92vh] flex flex-col font-sans text-xs text-neutral-200"
+        className={`bg-neutral-950 border ${theme.borderColor} rounded-3xl p-4 sm:p-6 w-full max-w-3xl shadow-2xl space-y-4 max-h-[92vh] flex flex-col font-sans text-xs text-neutral-200`}
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-neutral-800 pb-3 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-400/30">
+            <div className={`p-2 rounded-xl ${theme.badgeBg} ${theme.accentText} border ${theme.borderColor}`}>
               <Sliders className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-cinzel text-base sm:text-lg font-bold text-amber-200">
+              <h3 className={`font-cinzel text-base sm:text-lg font-bold ${theme.accentLightText}`}>
                 Personnalisation Complète du Faire-part & Programme
               </h3>
               <p className="text-[11px] text-neutral-400">
@@ -316,7 +373,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
             onClick={() => setActiveTab('identity')}
             className={`px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'identity'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50'
+                ? `${theme.badgeBg} ${theme.accentLightText} border ${theme.borderColor}`
                 : 'text-neutral-400 hover:text-white bg-neutral-900/50'
             }`}
           >
@@ -329,7 +386,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
             onClick={() => setActiveTab('ceremonies')}
             className={`px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'ceremonies'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50'
+                ? `${theme.badgeBg} ${theme.accentLightText} border ${theme.borderColor}`
                 : 'text-neutral-400 hover:text-white bg-neutral-900/50'
             }`}
           >
@@ -342,7 +399,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
             onClick={() => setActiveTab('faith')}
             className={`px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'faith'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50'
+                ? `${theme.badgeBg} ${theme.accentLightText} border ${theme.borderColor}`
                 : 'text-neutral-400 hover:text-white bg-neutral-900/50'
             }`}
           >
@@ -355,7 +412,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
             onClick={() => setActiveTab('biography')}
             className={`px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'biography'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50'
+                ? `${theme.badgeBg} ${theme.accentLightText} border ${theme.borderColor}`
                 : 'text-neutral-400 hover:text-white bg-neutral-900/50'
             }`}
           >
@@ -368,7 +425,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
             onClick={() => setActiveTab('orderOfService')}
             className={`px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'orderOfService'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50'
+                ? `${theme.badgeBg} ${theme.accentLightText} border ${theme.borderColor}`
                 : 'text-neutral-400 hover:text-white bg-neutral-900/50'
             }`}
           >
@@ -381,7 +438,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
             onClick={() => setActiveTab('family')}
             className={`px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'family'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50'
+                ? `${theme.badgeBg} ${theme.accentLightText} border ${theme.borderColor}`
                 : 'text-neutral-400 hover:text-white bg-neutral-900/50'
             }`}
           >
@@ -394,7 +451,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
             onClick={() => setActiveTab('appearance')}
             className={`px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'appearance'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50'
+                ? `${theme.badgeBg} ${theme.accentLightText} border ${theme.borderColor}`
                 : 'text-neutral-400 hover:text-white bg-neutral-900/50'
             }`}
           >
@@ -423,7 +480,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       required
                       value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      onChange={(e) => updateFormData({ fullName: e.target.value })}
                       placeholder="Ex: PETER ABIODUN OYENUGA"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 text-sm font-serif"
                     />
@@ -435,7 +492,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <input
                       type="text"
                       value={formData.honorific || ''}
-                      onChange={(e) => setFormData({ ...formData, honorific: e.target.value })}
+                      onChange={(e) => updateFormData({ honorific: e.target.value })}
                       placeholder="Ex: Pa / Doyen / Maman"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 text-xs"
                     />
@@ -450,7 +507,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <input
                       type="text"
                       value={formData.birthYear}
-                      onChange={(e) => setFormData({ ...formData, birthYear: e.target.value })}
+                      onChange={(e) => updateFormData({ birthYear: e.target.value })}
                       placeholder="1953"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 text-xs font-mono"
                     />
@@ -462,7 +519,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <input
                       type="text"
                       value={formData.passingYear}
-                      onChange={(e) => setFormData({ ...formData, passingYear: e.target.value })}
+                      onChange={(e) => updateFormData({ passingYear: e.target.value })}
                       placeholder="2024"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 text-xs font-mono"
                     />
@@ -476,8 +533,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       value={formData.age}
                       onChange={(e) => {
                         const val = Number(e.target.value);
-                        setFormData({
-                          ...formData,
+                        updateFormData({
                           age: val,
                           sealLabel: formData.language === 'en' ? `AGED ${val} YEARS` : `ÂGÉ DE ${val} ANS`,
                         });
@@ -492,7 +548,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <input
                       type="text"
                       value={formData.sealLabel}
-                      onChange={(e) => setFormData({ ...formData, sealLabel: e.target.value })}
+                      onChange={(e) => updateFormData({ sealLabel: e.target.value })}
                       placeholder="ÂGÉ DE 71 ANS"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 text-xs uppercase font-mono"
                     />
@@ -507,7 +563,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <input
                       type="text"
                       value={formData.exactDateOfBirth || ''}
-                      onChange={(e) => setFormData({ ...formData, exactDateOfBirth: e.target.value })}
+                      onChange={(e) => updateFormData({ exactDateOfBirth: e.target.value })}
                       placeholder="14 Août 1953"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 text-xs"
                     />
@@ -519,7 +575,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <input
                       type="text"
                       value={formData.exactDateOfPassing || ''}
-                      onChange={(e) => setFormData({ ...formData, exactDateOfPassing: e.target.value })}
+                      onChange={(e) => updateFormData({ exactDateOfPassing: e.target.value })}
                       placeholder="28 Décembre 2024"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 text-xs"
                     />
@@ -533,7 +589,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                   <input
                     type="text"
                     value={formData.epitaph || ''}
-                    onChange={(e) => setFormData({ ...formData, epitaph: e.target.value })}
+                    onChange={(e) => updateFormData({ epitaph: e.target.value })}
                     placeholder="Époux dévoué, Père bienveillant, Grand-père chéri, Patriarche et serviteur de Dieu."
                     className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 text-xs italic"
                   />
@@ -566,7 +622,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="url"
                       placeholder="Collez une URL d'image HTTPS..."
                       value={formData.portraitUrl.startsWith('data:') ? '' : formData.portraitUrl}
-                      onChange={(e) => setFormData({ ...formData, portraitUrl: e.target.value })}
+                      onChange={(e) => updateFormData({ portraitUrl: e.target.value })}
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-1.5 text-white focus:border-amber-400 text-xs font-mono"
                     />
                     <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded-xl text-neutral-200 cursor-pointer font-medium text-[11px] border border-neutral-700">
@@ -592,7 +648,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <input
                       type="text"
                       value={formData.headerSuperTitle}
-                      onChange={(e) => setFormData({ ...formData, headerSuperTitle: e.target.value })}
+                      onChange={(e) => updateFormData({ headerSuperTitle: e.target.value })}
                       placeholder="R E P O S   É T E R N E L"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs uppercase font-mono tracking-widest"
                     />
@@ -604,7 +660,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <input
                       type="text"
                       value={formData.mainHeadline}
-                      onChange={(e) => setFormData({ ...formData, mainHeadline: e.target.value })}
+                      onChange={(e) => updateFormData({ mainHeadline: e.target.value })}
                       placeholder="TRANSITION VERS LA GLOIRE"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs uppercase font-cinzel font-bold"
                     />
@@ -618,7 +674,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                   <textarea
                     rows={3}
                     value={formData.transitionPreamble}
-                    onChange={(e) => setFormData({ ...formData, transitionPreamble: e.target.value })}
+                    onChange={(e) => updateFormData({ transitionPreamble: e.target.value })}
                     placeholder="Avec des cœurs remplis d’espérance chrétienne..."
                     className="w-full bg-neutral-950 border border-neutral-700 rounded-xl p-2.5 text-white focus:border-amber-400 text-xs"
                   />
@@ -644,7 +700,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <input
                       type="text"
                       value={formData.officiatingChurch}
-                      onChange={(e) => setFormData({ ...formData, officiatingChurch: e.target.value })}
+                      onChange={(e) => updateFormData({ officiatingChurch: e.target.value })}
                       placeholder="Grand Temple Vine Branch Church"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
                     />
@@ -656,7 +712,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <input
                       type="text"
                       value={formData.dressCode || ''}
-                      onChange={(e) => setFormData({ ...formData, dressCode: e.target.value })}
+                      onChange={(e) => updateFormData({ dressCode: e.target.value })}
                       placeholder="Blanc pur & or ou Pagne commémoratif familial"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
                     />
@@ -676,10 +732,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.serviceOfSongs.title}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          serviceOfSongs: { ...formData.serviceOfSongs, title: e.target.value },
-                        })
+                        updateFormData((prev) => ({
+                          ...prev,
+                          serviceOfSongs: { ...prev.serviceOfSongs, title: e.target.value },
+                        }))
                       }
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
                     />
@@ -690,10 +746,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.serviceOfSongs.dateTime}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          serviceOfSongs: { ...formData.serviceOfSongs, dateTime: e.target.value },
-                        })
+                        updateFormData((prev) => ({
+                          ...prev,
+                          serviceOfSongs: { ...prev.serviceOfSongs, dateTime: e.target.value },
+                        }))
                       }
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
                     />
@@ -706,10 +762,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.serviceOfSongs.venueName}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          serviceOfSongs: { ...formData.serviceOfSongs, venueName: e.target.value },
-                        })
+                        updateFormData((prev) => ({
+                          ...prev,
+                          serviceOfSongs: { ...prev.serviceOfSongs, venueName: e.target.value },
+                        }))
                       }
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
                     />
@@ -720,10 +776,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.serviceOfSongs.address}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          serviceOfSongs: { ...formData.serviceOfSongs, address: e.target.value },
-                        })
+                        updateFormData((prev) => ({
+                          ...prev,
+                          serviceOfSongs: { ...prev.serviceOfSongs, address: e.target.value },
+                        }))
                       }
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
                     />
@@ -743,28 +799,72 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.funeralService.title}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          funeralService: { ...formData.funeralService, title: e.target.value },
-                        })
+                        updateFormData((prev) => ({
+                          ...prev,
+                          funeralService: { ...prev.funeralService, title: e.target.value },
+                        }))
                       }
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
                     />
                   </div>
                   <div>
-                    <label className="block text-neutral-300 mb-1 font-medium">Date & Heure principale</label>
+                    <label className="block text-neutral-300 mb-1 font-medium">
+                      Date & Heure du Culte (Décompte en direct)
+                    </label>
                     <input
-                      type="text"
-                      value={formData.funeralService.dateTime}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          funeralService: { ...formData.funeralService, dateTime: e.target.value },
-                        })
-                      }
-                      className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
+                      type="datetime-local"
+                      value={formData.funeralService.isoDateTime ? formData.funeralService.isoDateTime.substring(0, 16) : ''}
+                      onChange={(e) => {
+                        const isoVal = e.target.value;
+                        if (isoVal) {
+                          const dateObj = new Date(isoVal);
+                          const formatted = dateObj.toLocaleDateString(
+                            formData.language === 'en' ? 'en-US' : 'fr-FR',
+                            {
+                              weekday: 'long',
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            }
+                          );
+                          updateFormData((prev) => ({
+                            ...prev,
+                            funeralService: {
+                              ...prev.funeralService,
+                              isoDateTime: `${isoVal}:00`,
+                              dateTime: formatted,
+                            },
+                          }));
+                        } else {
+                          updateFormData((prev) => ({
+                            ...prev,
+                            funeralService: {
+                              ...prev.funeralService,
+                              isoDateTime: '',
+                            },
+                          }));
+                        }
+                      }}
+                      className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 text-xs font-mono"
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-neutral-300 mb-1 font-medium">Texte affiché sur le faire-part</label>
+                  <input
+                    type="text"
+                    value={formData.funeralService.dateTime}
+                    onChange={(e) =>
+                      updateFormData((prev) => ({
+                        ...prev,
+                        funeralService: { ...prev.funeralService, dateTime: e.target.value },
+                      }))
+                    }
+                    placeholder="Ex: Vendredi 28 Août 2026 à 10h00"
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
+                  />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
@@ -773,10 +873,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.funeralService.lyingInState || ''}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          funeralService: { ...formData.funeralService, lyingInState: e.target.value },
-                        })
+                        updateFormData((prev) => ({
+                          ...prev,
+                          funeralService: { ...prev.funeralService, lyingInState: e.target.value },
+                        }))
                       }
                       placeholder="Levée du corps & Recueillement : 08h30"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
@@ -788,10 +888,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.funeralService.serviceStartTime || ''}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          funeralService: { ...formData.funeralService, serviceStartTime: e.target.value },
-                        })
+                        updateFormData((prev) => ({
+                          ...prev,
+                          funeralService: { ...prev.funeralService, serviceStartTime: e.target.value },
+                        }))
                       }
                       placeholder="Office religieux solennel : 10h00"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
@@ -805,10 +905,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.funeralService.venueName}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          funeralService: { ...formData.funeralService, venueName: e.target.value },
-                        })
+                        updateFormData((prev) => ({
+                          ...prev,
+                          funeralService: { ...prev.funeralService, venueName: e.target.value },
+                        }))
                       }
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
                     />
@@ -819,10 +919,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.funeralService.address}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          funeralService: { ...formData.funeralService, address: e.target.value },
-                        })
+                        updateFormData((prev) => ({
+                          ...prev,
+                          funeralService: { ...prev.funeralService, address: e.target.value },
+                        }))
                       }
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
                     />
@@ -842,7 +942,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                   <input
                     type="text"
                     value={formData.intermentNote}
-                    onChange={(e) => setFormData({ ...formData, intermentNote: e.target.value })}
+                    onChange={(e) => updateFormData({ intermentNote: e.target.value })}
                     placeholder="Inhumation dans l’intimité familiale immédiatement après l’office religieux."
                     className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs italic"
                   />
@@ -854,14 +954,14 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.receptionDetail?.venue || ''}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
+                        updateFormData((prev) => ({
+                          ...prev,
                           receptionDetail: {
                             venue: e.target.value,
-                            time: formData.receptionDetail?.time || 'Dès 14h30',
-                            note: formData.receptionDetail?.note || 'Accueil et rafraîchissements',
+                            time: prev.receptionDetail?.time || 'Dès 14h30',
+                            note: prev.receptionDetail?.note || 'Accueil et rafraîchissements',
                           },
-                        })
+                        }))
                       }
                       placeholder="The Grand Marquee Event Center"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
@@ -873,14 +973,14 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.receptionDetail?.time || ''}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
+                        updateFormData((prev) => ({
+                          ...prev,
                           receptionDetail: {
-                            venue: formData.receptionDetail?.venue || '',
+                            venue: prev.receptionDetail?.venue || '',
                             time: e.target.value,
-                            note: formData.receptionDetail?.note || '',
+                            note: prev.receptionDetail?.note || '',
                           },
-                        })
+                        }))
                       }
                       placeholder="Dès 14h30"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
@@ -892,14 +992,14 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       type="text"
                       value={formData.receptionDetail?.note || ''}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
+                        updateFormData((prev) => ({
+                          ...prev,
                           receptionDetail: {
-                            venue: formData.receptionDetail?.venue || '',
-                            time: formData.receptionDetail?.time || '',
+                            venue: prev.receptionDetail?.venue || '',
+                            time: prev.receptionDetail?.time || '',
                             note: e.target.value,
                           },
-                        })
+                        }))
                       }
                       placeholder="Accueil fraternel & hommages"
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
@@ -926,7 +1026,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                   <textarea
                     rows={3}
                     value={formData.bibleVerse}
-                    onChange={(e) => setFormData({ ...formData, bibleVerse: e.target.value })}
+                    onChange={(e) => updateFormData({ bibleVerse: e.target.value })}
                     placeholder="J’ai combattu le bon combat, j’ai achevé la course, j’ai gardé la foi..."
                     className="w-full bg-neutral-950 border border-neutral-700 rounded-xl p-2.5 text-white focus:border-amber-400 text-xs font-serif italic"
                   />
@@ -939,7 +1039,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                   <input
                     type="text"
                     value={formData.verseReference}
-                    onChange={(e) => setFormData({ ...formData, verseReference: e.target.value })}
+                    onChange={(e) => updateFormData({ verseReference: e.target.value })}
                     placeholder="2 Timothée 4:7-8"
                     className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white focus:border-amber-400 text-xs font-mono font-bold"
                   />
@@ -964,10 +1064,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     type="text"
                     value={formData.biography?.earlyLifeTitle || 'Enfance, Racines & Formation'}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        biography: { ...formData.biography, earlyLifeTitle: e.target.value },
-                      })
+                      updateFormData((prev) => ({
+                        ...prev,
+                        biography: { ...(prev.biography || { earlyLifeTitle: '', earlyLifeText: '', careerTitle: '', careerText: '', faithTitle: '', faithText: '' }), earlyLifeTitle: e.target.value },
+                      }))
                     }
                     placeholder="Titre Section 1 (ex: Enfance & Formation)"
                     className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-amber-300 font-bold text-xs"
@@ -976,10 +1076,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     rows={3}
                     value={formData.biography?.earlyLifeText || ''}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        biography: { ...formData.biography, earlyLifeText: e.target.value },
-                      })
+                      updateFormData((prev) => ({
+                        ...prev,
+                        biography: { ...(prev.biography || { earlyLifeTitle: '', earlyLifeText: '', careerTitle: '', careerText: '', faithTitle: '', faithText: '' }), earlyLifeText: e.target.value },
+                      }))
                     }
                     placeholder="Récit de l'enfance, de la jeunesse et des valeurs familiales..."
                     className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2 text-neutral-200 text-xs font-serif leading-relaxed"
@@ -992,10 +1092,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     type="text"
                     value={formData.biography?.careerTitle || 'Carrière Professionnelle & Impact'}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        biography: { ...formData.biography, careerTitle: e.target.value },
-                      })
+                      updateFormData((prev) => ({
+                        ...prev,
+                        biography: { ...(prev.biography || { earlyLifeTitle: '', earlyLifeText: '', careerTitle: '', careerText: '', faithTitle: '', faithText: '' }), careerTitle: e.target.value },
+                      }))
                     }
                     placeholder="Titre Section 2 (ex: Carrière Professionnelle)"
                     className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-amber-300 font-bold text-xs"
@@ -1004,10 +1104,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     rows={3}
                     value={formData.biography?.careerText || ''}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        biography: { ...formData.biography, careerText: e.target.value },
-                      })
+                      updateFormData((prev) => ({
+                        ...prev,
+                        biography: { ...(prev.biography || { earlyLifeTitle: '', earlyLifeText: '', careerTitle: '', careerText: '', faithTitle: '', faithText: '' }), careerText: e.target.value },
+                      }))
                     }
                     placeholder="Parcours professionnel, réalisations et impact social..."
                     className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2 text-neutral-200 text-xs font-serif leading-relaxed"
@@ -1020,10 +1120,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     type="text"
                     value={formData.biography?.faithTitle || 'Foi en Christ & Héritage Familial'}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        biography: { ...formData.biography, faithTitle: e.target.value },
-                      })
+                      updateFormData((prev) => ({
+                        ...prev,
+                        biography: { ...(prev.biography || { earlyLifeTitle: '', earlyLifeText: '', careerTitle: '', careerText: '', faithTitle: '', faithText: '' }), faithTitle: e.target.value },
+                      }))
                     }
                     placeholder="Titre Section 3 (ex: Vie Spirituelle & Famille)"
                     className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-amber-300 font-bold text-xs"
@@ -1032,10 +1132,10 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     rows={3}
                     value={formData.biography?.faithText || ''}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        biography: { ...formData.biography, faithText: e.target.value },
-                      })
+                      updateFormData((prev) => ({
+                        ...prev,
+                        biography: { ...(prev.biography || { earlyLifeTitle: '', earlyLifeText: '', careerTitle: '', careerText: '', faithTitle: '', faithText: '' }), faithText: e.target.value },
+                      }))
                     }
                     placeholder="Dévotion religieuse, rôle dans l'église et héritage transmis..."
                     className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2 text-neutral-200 text-xs font-serif leading-relaxed"
@@ -1307,6 +1407,89 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                 </div>
               </div>
 
+              {/* Background Template Selector */}
+              <div className="p-3.5 bg-neutral-900/80 rounded-2xl border border-neutral-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-amber-400" />
+                    <h4 className="font-cinzel text-amber-300 font-bold text-xs uppercase tracking-wider">
+                      {formData.language === 'en' ? 'Heavenly Background Template' : 'Arrière-plan Céleste & Décor Funèbre'}
+                    </h4>
+                  </div>
+                  <span className="text-[10px] text-amber-400/80 font-medium">
+                    {defaultBackgroundTemplates.length} {formData.language === 'en' ? 'presets' : 'modèles'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-neutral-400">
+                  {formData.language === 'en'
+                    ? 'Select a solemn background theme or upload a custom visual for the memorial.'
+                    : 'Choisissez un arrière-plan céleste solennel ou téléchargez votre propre visuel pour le faire-part.'}
+                </p>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {defaultBackgroundTemplates.map((bg) => {
+                    const isSelected = formData.backgroundUrl === bg.url;
+                    return (
+                      <button
+                        key={bg.id}
+                        type="button"
+                        onClick={() => updateFormData({ backgroundUrl: bg.url })}
+                        className={`relative rounded-xl border overflow-hidden text-left transition-all group cursor-pointer ${
+                          isSelected
+                            ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-xl'
+                            : 'border-neutral-800 hover:border-neutral-600 bg-neutral-950'
+                        }`}
+                      >
+                        {/* Wallpaper Preview */}
+                        <div className="h-24 w-full relative overflow-hidden bg-neutral-900">
+                          <img
+                            src={bg.url}
+                            alt={formData.language === 'en' ? bg.nameEn : bg.name}
+                            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent" />
+                          {isSelected && (
+                            <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-amber-500 text-neutral-950 text-[9px] font-bold shadow-md flex items-center gap-0.5">
+                              <Check className="w-2.5 h-2.5" />
+                              <span>Actif</span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Info */}
+                        <div className="p-2 space-y-0.5 bg-neutral-950/90">
+                          <div className="font-cinzel font-bold text-white text-[11px] truncate">
+                            {formData.language === 'en' ? bg.nameEn : bg.name}
+                          </div>
+                          <div className="text-[9px] text-amber-300 font-medium truncate">
+                            {formData.language === 'en' ? bg.tagEn : bg.tag}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom Background Upload or Custom URL */}
+                <div className="pt-2 flex flex-wrap items-center gap-3">
+                  <label className="flex items-center gap-2 px-3 py-2 bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 rounded-xl cursor-pointer text-xs text-neutral-200 transition-all">
+                    <Upload className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{isUploadingBackground ? 'Téléchargement...' : 'Téléverser un fond personnalisé'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBackgroundUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  {formData.backgroundUrl && !defaultBackgroundTemplates.some((b) => b.url === formData.backgroundUrl) && (
+                    <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Fond personnalisé actif
+                    </span>
+                  )}
+                </div>
+              </div>
+
               {/* Theme Color Selector */}
               <div className="p-3.5 bg-neutral-900/80 rounded-2xl border border-neutral-800 space-y-2.5">
                 <h4 className="font-cinzel text-amber-300 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
@@ -1318,7 +1501,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                     <button
                       key={t.color}
                       type="button"
-                      onClick={() => setFormData({ ...formData, themeColor: t.color })}
+                      onClick={() => updateFormData({ themeColor: t.color })}
                       className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
                         formData.themeColor === t.color
                           ? `bg-neutral-900 border-amber-400 shadow-lg ring-1 ring-amber-400`
@@ -1363,7 +1546,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
             </button>
             <button
               onClick={handleApply}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 text-neutral-950 font-bold flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"
+              className={`px-5 py-2 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95`}
             >
               <Check className="w-4 h-4" />
               <span>Enregistrer & Appliquer</span>

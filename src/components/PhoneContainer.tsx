@@ -9,9 +9,12 @@ import {
   CheckCircle2,
   Globe,
 } from 'lucide-react';
+import { ThemeColor } from '../types';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface PhoneContainerProps {
   children: React.ReactNode;
+  themeColor?: ThemeColor;
   onOpenCustomizer?: () => void;
   onNewMemorial?: () => void;
   onOpenPayment?: () => void;
@@ -27,6 +30,7 @@ interface PhoneContainerProps {
 
 export const PhoneContainer: React.FC<PhoneContainerProps> = ({
   children,
+  themeColor = 'imperial-gold',
   onOpenCustomizer,
   onNewMemorial,
   onOpenPayment,
@@ -39,21 +43,23 @@ export const PhoneContainer: React.FC<PhoneContainerProps> = ({
   language = 'fr',
   onToggleLanguage,
 }) => {
+  const theme = getThemeStyles(themeColor);
+
   return (
     <div className="min-h-[100dvh] w-full bg-neutral-950 text-neutral-100 font-sans-custom flex justify-center selection:bg-amber-500 selection:text-neutral-950">
       {/* Central App Wrapper (Native Full-Screen on Mobile, Clean Centered on Tablet/Desktop) */}
       <div className="w-full max-w-lg min-h-[100dvh] bg-neutral-950 flex flex-col justify-between relative shadow-2xl sm:border-x sm:border-neutral-800/80">
         
         {/* Sleek Top Header */}
-        <header className="sticky top-0 z-40 w-full bg-neutral-950/95 backdrop-blur-md border-b border-amber-500/20 px-3 py-2 flex items-center justify-between gap-2 shadow-md">
+        <header className={`sticky top-0 z-40 w-full bg-neutral-950/95 backdrop-blur-md border-b ${theme.borderColor} px-3 py-2 flex items-center justify-between gap-2 shadow-md`}>
           {/* Brand Logo / Memorial Info */}
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-700 via-amber-500 to-amber-300 p-0.5 shadow-md flex items-center justify-center shrink-0">
+            <div className={`w-7 h-7 rounded-full bg-gradient-to-tr ${theme.buttonGradient} p-0.5 shadow-md flex items-center justify-center shrink-0`}>
               <span className="text-[10px] font-bold text-neutral-950 font-cinzel">CV</span>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h1 className="font-cinzel text-xs sm:text-sm font-bold text-amber-200 tracking-wider truncate">
+                <h1 className={`font-cinzel text-xs sm:text-sm font-bold ${theme.accentLightText} tracking-wider truncate`}>
                   {isGuestMode ? (language === 'en' ? 'In Loving Memory' : 'Faire-part d’Obsèques') : title}
                 </h1>
                 {!isGuestMode && (
@@ -81,12 +87,12 @@ export const PhoneContainer: React.FC<PhoneContainerProps> = ({
                 title={isAudioPlaying ? "Couper la musique nécrologique" : "Jouer la musique nécrologique"}
                 className={`px-2 py-1.5 rounded-xl text-xs flex items-center gap-1.5 transition-all border cursor-pointer ${
                   isAudioPlaying
-                    ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-sm shadow-amber-500/20 animate-pulse'
-                    : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-amber-200'
+                    ? `bg-neutral-900 ${theme.borderColor} ${theme.accentText} shadow-sm animate-pulse`
+                    : `bg-neutral-900 border-neutral-800 text-neutral-400 hover:${theme.accentLightText}`
                 }`}
               >
                 {isAudioPlaying ? (
-                  <Volume2 className="w-3.5 h-3.5 text-amber-400" />
+                  <Volume2 className={`w-3.5 h-3.5 ${theme.accentText}`} />
                 ) : (
                   <VolumeX className="w-3.5 h-3.5" />
                 )}
@@ -106,7 +112,7 @@ export const PhoneContainer: React.FC<PhoneContainerProps> = ({
                     className="p-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 text-xs flex items-center gap-1 transition-all cursor-pointer"
                     title={language === 'fr' ? "Basculer l'invitation en Anglais" : "Switch invitation to French"}
                   >
-                    <Globe className="w-3.5 h-3.5 text-amber-400" />
+                    <Globe className={`w-3.5 h-3.5 ${theme.accentText}`} />
                     <span className="text-[10px] font-bold uppercase">{language}</span>
                   </button>
                 )}
@@ -115,7 +121,7 @@ export const PhoneContainer: React.FC<PhoneContainerProps> = ({
                 {(onNewMemorial || onOpenCustomizer) && (
                   <button
                     onClick={onNewMemorial || onOpenCustomizer}
-                    className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-neutral-950 font-bold text-xs flex items-center gap-1 shadow-md transition-all active:scale-95 cursor-pointer"
+                    className={`px-2.5 py-1.5 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold text-xs flex items-center gap-1 shadow-md transition-all active:scale-95 cursor-pointer`}
                     title="Créer ou modifier le faire-part"
                   >
                     <Sparkles className="w-3.5 h-3.5 fill-neutral-950 shrink-0" />
@@ -123,26 +129,14 @@ export const PhoneContainer: React.FC<PhoneContainerProps> = ({
                   </button>
                 )}
 
-                {/* FedaPay Button (if not yet paid) */}
-                {!isPaid && onOpenPayment && (
-                  <button
-                    onClick={onOpenPayment}
-                    className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 text-neutral-950 font-bold text-xs flex items-center gap-1 shadow-md transition-all active:scale-95 cursor-pointer"
-                    title="Payer 500 FCFA avec FedaPay"
-                  >
-                    <Zap className="w-3.5 h-3.5 fill-neutral-950 shrink-0" />
-                    <span className="text-[11px]">500 F</span>
-                  </button>
-                )}
-
                 {/* Customizer / Settings Icon */}
                 {onOpenCustomizer && (
                   <button
                     onClick={onOpenCustomizer}
-                    className="p-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 text-xs flex items-center justify-center transition-all cursor-pointer"
+                    className={`p-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 hover:${theme.borderColor} text-xs flex items-center justify-center transition-all cursor-pointer`}
                     title="Personnaliser les informations"
                   >
-                    <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                    <Sliders className={`w-3.5 h-3.5 ${theme.accentText}`} />
                   </button>
                 )}
               </>
@@ -154,7 +148,7 @@ export const PhoneContainer: React.FC<PhoneContainerProps> = ({
                 onClick={onToggleGuestMode}
                 className={`p-1.5 sm:px-2 rounded-xl text-xs flex items-center gap-1 transition-all border cursor-pointer ${
                   isGuestMode
-                    ? 'bg-amber-500/20 border-amber-400 text-amber-300 font-semibold'
+                    ? `bg-neutral-900 ${theme.borderColor} ${theme.accentText} font-semibold`
                     : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
                 }`}
                 title={isGuestMode ? (language === 'en' ? 'Return to Created for you' : 'Revenir à l’espace : Créé pour vous') : (language === 'en' ? 'Guest Preview' : 'Tester la vue Invité')}

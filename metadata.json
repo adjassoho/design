@@ -1,7 +1,10 @@
 {
   "name": "Convive - Faire-part & Cartes d'Obsèques Numériques",
   "description": "Faire-part d'obsèques animés et nominatifs avec itinéraire GPS, programme de culte, livre de condoléances, cantiques et paiement FedaPay (Mobile Money).",
-  "requestFramePermissions": ["geolocation"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
-

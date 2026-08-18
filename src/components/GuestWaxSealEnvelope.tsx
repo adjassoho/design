@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { waxSealDefault } from '../data/defaultMemorial';
+import { ThemeColor } from '../types';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface GuestWaxSealEnvelopeProps {
   guestName?: string | null;
@@ -11,6 +13,8 @@ interface GuestWaxSealEnvelopeProps {
   sealLabel?: string;
   age?: number;
   portraitUrl?: string;
+  bibleVerse?: string;
+  themeColor?: ThemeColor;
   onOpen?: () => void;
   onOpenEnvelope?: () => void;
   language?: 'fr' | 'en';
@@ -23,11 +27,14 @@ export const GuestWaxSealEnvelope: React.FC<GuestWaxSealEnvelopeProps> = ({
   sealText,
   sealLabel,
   age,
+  bibleVerse,
+  themeColor,
   onOpen,
   onOpenEnvelope,
   language = 'fr',
 }) => {
   const isEn = language === 'en';
+  const theme = getThemeStyles(themeColor);
   const [isOpening, setIsOpening] = useState(false);
 
   const displaySealText = sealLabel || sealText || (age ? (isEn ? `AGED ${age} YEARS` : `ÂGÉ DE ${age} ANS`) : '71 ANS');
@@ -56,32 +63,32 @@ export const GuestWaxSealEnvelope: React.FC<GuestWaxSealEnvelopeProps> = ({
         initial={{ opacity: 0, y: 30, scale: 0.94 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="relative w-full max-w-sm bg-neutral-900 border-2 border-amber-500/40 rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center space-y-6 overflow-hidden"
+        className={`relative w-full max-w-sm bg-gradient-to-b ${theme.cardGradient} border-2 ${theme.borderColor} rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center space-y-6 overflow-hidden`}
       >
         {/* Gold Trim Corner accents */}
-        <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-amber-400/80 rounded-tl-2xl" />
-        <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-amber-400/80 rounded-tr-2xl" />
-        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-amber-400/80 rounded-bl-2xl" />
-        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-amber-400/80 rounded-br-2xl" />
+        <div className={`absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 ${theme.borderColor} rounded-tl-2xl`} />
+        <div className={`absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 ${theme.borderColor} rounded-tr-2xl`} />
+        <div className={`absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 ${theme.borderColor} rounded-bl-2xl`} />
+        <div className={`absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 ${theme.borderColor} rounded-br-2xl`} />
 
         {/* Envelope Top Flap Simulation */}
         <div className="w-full pt-2 flex flex-col items-center space-y-1">
-          <span className="text-[10px] tracking-[0.25em] font-cinzel uppercase text-amber-300/90 font-bold">
+          <span className={`text-[10px] tracking-[0.25em] font-cinzel uppercase ${theme.accentText} font-bold`}>
             {isEn ? 'F U N E R A L   I N V I T A T I O N' : 'F A I R E - P A R T   D ’ O B S È Q U E S'}
           </span>
-          <div className="h-px w-28 bg-gradient-to-r from-transparent via-amber-400/70 to-transparent" />
+          <div className={`h-px w-28 bg-gradient-to-r from-transparent via-current ${theme.accentText} to-transparent`} />
         </div>
 
         {/* Guest Personalized Greeting Title */}
         <div className="space-y-1.5 z-10">
-          <p className="text-xs text-amber-200/80 font-serif italic">
+          <p className={`text-xs ${theme.accentLightText} font-serif italic`}>
             {isEn ? 'To the attention of' : 'À l’attention de'}
           </p>
-          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-amber-100 tracking-wide drop-shadow-sm">
+          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-wide drop-shadow-sm">
             {recipientGreeting}
           </h2>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-950/60 border border-amber-500/30 rounded-full text-[11px] text-amber-300 font-medium">
-            <Sparkles className="w-3 h-3 text-amber-400" />
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 bg-black/40 border ${theme.borderColor} rounded-full text-[11px] ${theme.accentLightText} font-medium`}>
+            <Sparkles className={`w-3.5 h-3.5 ${theme.accentText}`} />
             {isEn ? 'Solemn Funeral Announcement' : 'Faire-part & Invitation au Culte'}
           </span>
         </div>
@@ -92,7 +99,7 @@ export const GuestWaxSealEnvelope: React.FC<GuestWaxSealEnvelopeProps> = ({
           <motion.div
             animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-            className="absolute -inset-4 bg-amber-500/20 rounded-full blur-md"
+            className={`absolute -inset-4 ${theme.badgeBg} rounded-full blur-md`}
           />
 
           <motion.div
@@ -111,14 +118,14 @@ export const GuestWaxSealEnvelope: React.FC<GuestWaxSealEnvelopeProps> = ({
             onClick={handleBreakSeal}
             className="relative cursor-pointer group flex flex-col items-center"
           >
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-amber-300/80 p-1 shadow-2xl bg-radial from-amber-600 via-amber-800 to-amber-950 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+            <div className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 ${theme.borderColor} p-1 shadow-2xl bg-radial from-amber-600 via-amber-800 to-amber-950 flex items-center justify-center transition-transform duration-300 group-hover:scale-105`}>
               <img
                 src={waxSealDefault}
                 alt="Sceau d'Obsèques"
                 className="w-full h-full rounded-full object-cover shadow-inner"
               />
             </div>
-            <span className="absolute -bottom-2 px-2.5 py-0.5 bg-neutral-900 border border-amber-500/50 rounded-full text-[9px] font-cinzel text-amber-300 uppercase tracking-widest font-bold shadow-md">
+            <span className={`absolute -bottom-2 px-2.5 py-0.5 bg-neutral-900 border ${theme.borderColor} rounded-full text-[9px] font-cinzel ${theme.accentText} uppercase tracking-widest font-bold shadow-md`}>
               {displaySealText}
             </span>
           </motion.div>
@@ -129,11 +136,11 @@ export const GuestWaxSealEnvelope: React.FC<GuestWaxSealEnvelopeProps> = ({
           <p className="text-[11px] text-neutral-400 font-sans leading-relaxed">
             {isEn ? 'In loving memory of' : 'En hommage et mémoire éternelle de'}
           </p>
-          <h3 className="font-cinzel text-sm sm:text-base font-bold text-amber-300 tracking-wider">
+          <h3 className={`font-cinzel text-sm sm:text-base font-bold ${theme.accentText} tracking-wider`}>
             {deceasedName}
           </h3>
-          <p className="text-[10px] text-amber-400/80 font-serif italic">
-            {isEn ? '« I have fought the good fight, I have kept the faith. »' : '« J’ai combattu le bon combat, j’ai gardé la foi. »'}
+          <p className="text-[10px] text-neutral-300 font-serif italic">
+            « {bibleVerse || (isEn ? 'I have fought the good fight, I have kept the faith.' : 'J’ai combattu le bon combat, j’ai gardé la foi.')} »
           </p>
         </div>
 
@@ -143,7 +150,7 @@ export const GuestWaxSealEnvelope: React.FC<GuestWaxSealEnvelopeProps> = ({
           whileTap={{ scale: 0.97 }}
           onClick={handleBreakSeal}
           disabled={isOpening}
-          className="w-full py-3.5 px-4 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-400 text-neutral-950 font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 text-xs uppercase tracking-wider font-cinzel cursor-pointer transition-all active:scale-95"
+          className={`w-full py-3.5 px-4 bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 text-xs uppercase tracking-wider font-cinzel cursor-pointer transition-all active:scale-95`}
         >
           {isOpening ? (
             <span className="animate-pulse">{isEn ? 'Opening the card...' : 'Ouverture de la carte...'}</span>
@@ -164,3 +171,4 @@ export const GuestWaxSealEnvelope: React.FC<GuestWaxSealEnvelopeProps> = ({
     </div>
   );
 };
+

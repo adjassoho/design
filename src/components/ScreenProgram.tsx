@@ -1,6 +1,6 @@
 import React from 'react';
 import { FuneralProfile, GuestItem } from '../types';
-import { waxSealDefault } from '../data/defaultMemorial';
+import { cloudsDefault } from '../data/defaultMemorial';
 import {
   Calendar,
   MapPin,
@@ -12,10 +12,14 @@ import {
   Flame,
   CheckCircle2,
   Shirt,
+  Phone,
+  Clock,
+  Church,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { LiveCountdown } from './LiveCountdown';
 import { LiveItineraryButton } from './LiveItineraryButton';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface ScreenProgramProps {
   memorial: FuneralProfile;
@@ -35,27 +39,28 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
   onLightCandle,
 }) => {
   const isEn = memorial.language === 'en';
+  const theme = getThemeStyles(memorial.themeColor);
 
   return (
     <div className="relative w-full flex-1 flex flex-col justify-between overflow-x-hidden select-none bg-neutral-950 pb-6">
       {/* Background Heavenly Clouds & Radiant Glow */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <img
-          src={memorial.backgroundUrl}
+          src={memorial.backgroundUrl || cloudsDefault}
           alt="Celestial Clouds"
-          className="w-full h-full object-cover object-top opacity-85 scale-105 filter brightness-105"
+          className="w-full h-full object-cover object-top opacity-90 scale-105 filter brightness-105"
           referrerPolicy="no-referrer"
         />
         {/* Soft Golden Sunlight Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-amber-100/30 via-transparent to-neutral-950/80 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-neutral-950/90 pointer-events-none" />
       </div>
 
       {/* Guest Personalized Top Welcome Banner */}
-      <div className="relative z-20 mx-3 mt-2 px-3 py-1.5 bg-neutral-900/90 border border-amber-500/40 rounded-xl shadow-lg flex items-center justify-between text-xs">
-        <div className="flex items-center gap-1.5 text-amber-200">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+      <div className={`relative z-20 mx-3 mt-2 px-3 py-1.5 bg-neutral-900/90 border ${theme.borderColor} rounded-xl shadow-lg flex items-center justify-between text-xs backdrop-blur-xs`}>
+        <div className={`flex items-center gap-1.5 ${theme.accentLightText}`}>
+          <Sparkles className={`w-3.5 h-3.5 ${theme.accentText}`} />
           <span className="font-serif italic">{isEn ? 'Welcome,' : 'Bienvenue,'}</span>
-          <span className="font-bold text-white">
+          <span className="font-bold text-white truncate max-w-[130px] sm:max-w-none">
             {activeGuest?.displayName || (isEn ? 'Madam / Sir' : 'Madame / Monsieur')}
           </span>
         </div>
@@ -66,131 +71,74 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
         ) : (
           <button
             onClick={onOpenRsvpModal}
-            className="text-[10px] px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold rounded-lg cursor-pointer transition-all active:scale-95"
+            className={`text-[10px] px-2.5 py-1 bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold rounded-lg cursor-pointer transition-all active:scale-95 shadow-xs`}
           >
             {isEn ? 'Confirm RSVP' : 'Confirmer RSVP'}
           </button>
         )}
       </div>
 
-      {/* Top Header Elements */}
-      <header className="relative z-10 pt-2 px-6 flex flex-col items-center">
+      {/* Top Header Elements - Dignified, Centered & Fully Legible */}
+      <header className="relative z-10 pt-3 px-4 flex flex-col items-center text-center">
         {/* Header Super Title */}
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="w-full text-center tracking-[0.45em] text-[13px] sm:text-[14px] font-cinzel font-semibold text-amber-900/90 uppercase drop-shadow-sm mb-1"
+          className={`w-full text-center tracking-[0.35em] text-[11px] sm:text-[12px] font-cinzel font-semibold ${theme.accentLightText} uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] mb-1`}
         >
           {memorial.headerSuperTitle || (isEn ? "H E A V E N ' S   G A I N" : "R E P O S   É T E R N E L")}
         </motion.div>
 
-        {/* Headline Banner */}
-        <div className="w-full flex justify-end pr-1">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.9, delay: 0.2 }}
-            className="flex flex-col items-end text-right"
-          >
-            {isEn ? (
-              <>
-                <div className="flex items-center space-x-1">
-                  <span className="font-cinzel text-xl sm:text-2xl font-black tracking-tight text-[#6D1B28] leading-none">
-                    TRANSITION
-                  </span>
-                  <span className="w-5 h-5 rounded-full bg-gradient-to-b from-amber-600 to-amber-800 text-[9px] font-bold text-amber-100 flex items-center justify-center shadow-sm">
-                    TO
-                  </span>
-                </div>
-                <span className="font-cinzel text-2xl sm:text-3xl font-black tracking-wide text-[#6D1B28] -mt-1 leading-none">
-                  GLORY
-                </span>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center space-x-1">
-                  <span className="font-cinzel text-xl sm:text-2xl font-black tracking-tight text-[#6D1B28] leading-none">
-                    TRANSITION
-                  </span>
-                  <span className="w-6 h-5 rounded-full bg-gradient-to-b from-amber-600 to-amber-800 text-[8px] font-bold text-amber-100 flex items-center justify-center shadow-sm">
-                    VERS
-                  </span>
-                </div>
-                <span className="font-cinzel text-2xl sm:text-3xl font-black tracking-wide text-[#6D1B28] -mt-1 leading-none">
-                  LA GLOIRE
-                </span>
-              </>
-            )}
-          </motion.div>
-        </div>
+        {/* Main Headline Banner - Centered, Uncut & High Contrast */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.9, delay: 0.15 }}
+          className="w-full text-center px-2"
+        >
+          <h1 className="font-cinzel text-xl sm:text-2xl font-black tracking-wide text-white leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+            {memorial.mainHeadline || (isEn ? 'TRANSITION TO GLORY' : 'TRANSITION VERS LA GLOIRE')}
+          </h1>
+        </motion.div>
       </header>
 
-      {/* Center Section: Dignified Portrait with Cloud Mist */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center -mt-4 px-4">
+      {/* Center Section: Dignified Portrait without intrusive badge */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center mt-2 px-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.92 }}
+          initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.3 }}
+          transition={{ duration: 1, delay: 0.25 }}
           className="relative max-w-[340px] w-full flex justify-center"
         >
           {/* Portrait Image */}
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+          <div className={`relative rounded-2xl overflow-hidden shadow-[0_12px_36px_rgba(0,0,0,0.8)] border-2 ${theme.borderColor}`}>
             <img
               src={memorial.portraitUrl}
               alt={memorial.fullName}
-              className="w-full max-h-[320px] object-cover object-top filter contrast-105"
+              className="w-full max-h-[310px] object-cover object-top filter contrast-105"
               referrerPolicy="no-referrer"
             />
             {/* Ethereal bottom cloud blend */}
-            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-transparent pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-transparent pointer-events-none" />
           </div>
-
-          {/* Gold Wax Seal Badge ("ÂGÉ DE 71 ANS" / "AGED 71 YEARS") */}
-          <motion.button
-            whileHover={{ scale: 1.06, rotate: 3 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => onNavigateTab('biography')}
-            title="Consulter les étapes de vie & Biographie"
-            className="absolute -right-3 sm:-right-4 top-[62%] -translate-y-1/2 z-20 focus:outline-hidden cursor-pointer"
-          >
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]">
-              <img
-                src={waxSealDefault}
-                alt={memorial.sealLabel}
-                className="w-full h-full object-contain filter drop-shadow-md"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-1.5">
-                <span className="text-[7px] sm:text-[8px] tracking-wider text-amber-950 font-bold font-montserrat uppercase">
-                  {isEn ? 'AGED' : 'ÂGÉ DE'}
-                </span>
-                <span className="text-xl sm:text-2xl font-cinzel font-black text-amber-950 leading-none my-0.5">
-                  {memorial.age}
-                </span>
-                <span className="text-[7px] sm:text-[8px] tracking-wider text-amber-950 font-bold font-montserrat uppercase">
-                  {isEn ? 'YEARS' : 'ANS'}
-                </span>
-              </div>
-            </div>
-          </motion.button>
         </motion.div>
       </div>
 
-      {/* Main Dark Onyx Obsequies Card */}
-      <div className="relative z-20 px-3 pb-3 -mt-6 space-y-3">
+      {/* Main Obsequies Card matching dynamic theme */}
+      <div className="relative z-20 px-3 pb-3 -mt-4 space-y-3">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="relative bg-[#141619] rounded-2xl p-4 sm:p-5 border border-amber-500/50 shadow-[0_15px_40px_rgba(0,0,0,0.9)] overflow-hidden"
+          className={`relative bg-gradient-to-b ${theme.cardGradient} rounded-2xl p-4 sm:p-5 border ${theme.borderColor} shadow-[0_15px_40px_rgba(0,0,0,0.9)] overflow-hidden`}
         >
           {/* Inner Golden Hairline Frame */}
           <div className="absolute inset-1.5 border border-amber-400/30 rounded-xl pointer-events-none" />
 
           {/* Top Notch Decorative Arch */}
           <div className="text-center mb-3">
-            <h2 className="font-cinzel text-2xl sm:text-3xl font-extrabold tracking-widest text-gold-gradient drop-shadow uppercase">
+            <h2 className={`font-cinzel text-2xl sm:text-3xl font-extrabold tracking-widest ${theme.titleGradient} drop-shadow uppercase`}>
               {isEn ? 'OBSEQUIES' : 'OBSÈQUES'}
             </h2>
             {/* Elegant curved gold divider */}
@@ -205,17 +153,20 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
           <div className="space-y-3.5 text-center text-xs sm:text-sm font-sans-custom relative z-10">
             {/* 1. Service of Songs */}
             <div className="space-y-0.5">
-              <div className="font-cinzel font-bold text-amber-300 text-sm tracking-wider uppercase">
+              <div className={`font-cinzel font-bold ${theme.accentText} text-sm tracking-wider uppercase`}>
                 {memorial.serviceOfSongs.title}
               </div>
               <div className="text-neutral-100 font-medium text-[12px] sm:text-xs">
                 {memorial.serviceOfSongs.dateTime}
               </div>
+              <div className="text-neutral-300 text-[11px]">
+                {memorial.serviceOfSongs.venueName}
+              </div>
             </div>
 
             {/* 2. Funeral Service */}
             <div className="space-y-0.5 pt-1">
-              <div className="font-cinzel font-bold text-amber-300 text-sm tracking-wider uppercase">
+              <div className={`font-cinzel font-bold ${theme.accentText} text-sm tracking-wider uppercase`}>
                 {memorial.funeralService.title}
               </div>
               <div className="text-neutral-100 font-medium text-[12px] sm:text-xs leading-relaxed">
@@ -227,9 +178,22 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
               </div>
               <div className="text-amber-200/90 text-[11px] sm:text-xs mt-1 font-normal flex items-center justify-center gap-1">
                 <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
-                <span>{memorial.officiatingChurch}</span>
+                <span>{memorial.officiatingChurch || memorial.funeralService.venueName}</span>
               </div>
             </div>
+
+            {/* Reception Banner if configured */}
+            {memorial.receptionDetail?.venue && (
+              <div className="p-2.5 bg-black/40 border border-amber-500/30 rounded-xl text-left text-xs space-y-0.5">
+                <span className="font-cinzel text-amber-300 font-bold uppercase text-[10px] tracking-wider block">
+                  🍽️ {isEn ? 'Reception / Banquet' : 'Réception & Collation'}
+                </span>
+                <p className="text-neutral-200 font-semibold">{memorial.receptionDetail.venue}</p>
+                <p className="text-[11px] text-neutral-400">
+                  {memorial.receptionDetail.time} — {memorial.receptionDetail.note}
+                </p>
+              </div>
+            )}
 
             {/* Dress Code Badge if provided */}
             {memorial.dressCode && (
@@ -244,7 +208,7 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
               <h3 className="font-cormorant italic text-2xl sm:text-3xl font-bold tracking-tight text-white leading-none">
                 {memorial.fullName}
               </h3>
-              <p className="font-montserrat text-xs tracking-widest text-amber-400 font-semibold mt-1">
+              <p className={`font-montserrat text-xs tracking-widest ${theme.accentLightText} font-semibold mt-1`}>
                 {memorial.birthYear} — {memorial.passingYear}
               </p>
             </div>
@@ -258,17 +222,17 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
           </div>
 
           {/* Quick Action Navigation Bars */}
-          <div className="mt-4 pt-3 border-t border-amber-500/20 grid grid-cols-2 gap-2">
+          <div className={`mt-4 pt-3 border-t ${theme.borderColor} grid grid-cols-2 gap-2`}>
             <button
               onClick={() => onNavigateTab('order-of-service')}
-              className="py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              className={`py-2 px-3 rounded-xl ${theme.secondaryBtn} text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer`}
             >
               <BookOpen className="w-3.5 h-3.5" />
               <span>{isEn ? 'Order of Service' : 'Ordre du Culte'}</span>
             </button>
             <button
               onClick={onOpenRsvpModal || onLightCandle}
-              className="py-2 px-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-neutral-950 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer active:scale-95"
+              className={`py-2 px-3 rounded-xl bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer active:scale-95`}
             >
               <Flame className="w-3.5 h-3.5 fill-current text-neutral-950" />
               <span>{isEn ? 'RSVP & Condolences' : 'RSVP & Condoléances'}</span>
@@ -278,8 +242,10 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
 
         {/* Live Countdown to Funeral Service */}
         <LiveCountdown
-          targetDateString="2025-02-14T10:00:00"
-          targetTitle={isEn ? "Funeral Service & Obsequies" : "Culte d’Obsèques & Inhumation"}
+          targetDateString={memorial.funeralService.isoDateTime || memorial.funeralService.dateTime}
+          targetTitle={memorial.funeralService.title}
+          themeColor={memorial.themeColor}
+          language={memorial.language || 'fr'}
         />
 
         {/* GPS Itinerary Direct Action */}
@@ -288,8 +254,11 @@ export const ScreenProgram: React.FC<ScreenProgramProps> = ({
           venueAddress={memorial.funeralService.address}
           destinationLat={memorial.venueLat}
           destinationLng={memorial.venueLng}
+          themeColor={memorial.themeColor}
+          language={memorial.language || 'fr'}
         />
       </div>
     </div>
   );
 };
+

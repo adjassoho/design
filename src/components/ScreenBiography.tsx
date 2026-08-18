@@ -1,8 +1,9 @@
 import React from 'react';
 import { FuneralProfile } from '../types';
 import { defaultMilestones } from '../data/defaultMemorial';
-import { Award, Heart, Star, Sparkles, UserCheck } from 'lucide-react';
+import { Award, Heart, Star, Sparkles, UserCheck, Phone, Users } from 'lucide-react';
 import { motion } from 'motion/react';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface ScreenBiographyProps {
   memorial: FuneralProfile;
@@ -10,15 +11,16 @@ interface ScreenBiographyProps {
 
 export const ScreenBiography: React.FC<ScreenBiographyProps> = ({ memorial }) => {
   const isEn = memorial.language === 'en';
+  const theme = getThemeStyles(memorial.themeColor);
 
   return (
     <div className="relative w-full flex-1 flex flex-col justify-between bg-neutral-950 text-neutral-100 p-4 font-sans-custom select-none pb-6">
       {/* Header */}
-      <div className="relative z-10 space-y-1.5 pb-3 border-b border-amber-500/20 text-center">
-        <span className="text-[10px] font-cinzel tracking-[0.3em] text-amber-400 font-semibold uppercase">
+      <div className={`relative z-10 space-y-1.5 pb-3 border-b ${theme.borderColor} text-center`}>
+        <span className={`text-[10px] font-cinzel tracking-[0.3em] ${theme.accentText} font-semibold uppercase`}>
           {isEn ? 'Life, Faith & Legacy' : 'Vie, Foi & Héritage'}
         </span>
-        <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-amber-200 uppercase">
+        <h2 className={`font-cinzel text-xl sm:text-2xl font-bold ${theme.titleGradient} uppercase`}>
           {isEn ? 'Biography & Milestones' : 'Biographie & Grandes Étapes'}
         </h2>
         <p className="text-xs text-neutral-400">
@@ -30,9 +32,9 @@ export const ScreenBiography: React.FC<ScreenBiographyProps> = ({ memorial }) =>
 
       {/* Content */}
       <div className="relative z-10 flex-1 py-4 space-y-4">
-        {/* Profile Card Summary */}
-        <div className="bg-gradient-to-r from-amber-950/40 via-neutral-900 to-neutral-900 rounded-3xl p-4 sm:p-5 border border-amber-500/40 shadow-xl flex items-center gap-4">
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-amber-400/60 shadow-lg shrink-0">
+        {/* Profile Card Summary with dynamic theme */}
+        <div className={`bg-gradient-to-r ${theme.cardGradient} rounded-3xl p-4 sm:p-5 border ${theme.borderColor} shadow-xl flex items-center gap-4`}>
+          <div className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 ${theme.borderColor} shadow-lg shrink-0`}>
             <img
               src={memorial.portraitUrl}
               alt={memorial.fullName}
@@ -41,10 +43,10 @@ export const ScreenBiography: React.FC<ScreenBiographyProps> = ({ memorial }) =>
             />
           </div>
           <div>
-            <h3 className="font-serif text-xl sm:text-2xl font-bold text-amber-100 leading-tight">
+            <h3 className="font-serif text-xl sm:text-2xl font-bold text-white leading-tight">
               {memorial.fullName}
             </h3>
-            <p className="text-xs text-amber-300 tracking-wider font-semibold mt-0.5">
+            <p className={`text-xs ${theme.accentLightText} tracking-wider font-semibold mt-0.5`}>
               {memorial.birthYear} — {memorial.passingYear} ({isEn ? `Aged ${memorial.age}` : `Âgé de ${memorial.age} ans`})
             </p>
             <p className="text-[11px] text-neutral-300 italic font-serif mt-1">
@@ -59,7 +61,7 @@ export const ScreenBiography: React.FC<ScreenBiographyProps> = ({ memorial }) =>
         {/* Narrative Biography Sections */}
         <div className="bg-neutral-900/90 rounded-3xl p-5 border border-neutral-800 space-y-4 text-xs sm:text-sm leading-relaxed text-neutral-200">
           <div>
-            <h4 className="font-cinzel text-amber-300 font-bold text-sm tracking-wider uppercase mb-1.5 flex items-center gap-1.5">
+            <h4 className={`font-cinzel ${theme.accentText} font-bold text-sm tracking-wider uppercase mb-1.5 flex items-center gap-1.5`}>
               <Star className="w-4 h-4 text-amber-400" />
               <span>
                 {memorial.biography?.earlyLifeTitle ||
@@ -75,7 +77,7 @@ export const ScreenBiography: React.FC<ScreenBiographyProps> = ({ memorial }) =>
           </div>
 
           <div className="border-t border-neutral-800 pt-3">
-            <h4 className="font-cinzel text-amber-300 font-bold text-sm tracking-wider uppercase mb-1.5 flex items-center gap-1.5">
+            <h4 className={`font-cinzel ${theme.accentText} font-bold text-sm tracking-wider uppercase mb-1.5 flex items-center gap-1.5`}>
               <Award className="w-4 h-4 text-amber-400" />
               <span>
                 {memorial.biography?.careerTitle ||
@@ -91,7 +93,7 @@ export const ScreenBiography: React.FC<ScreenBiographyProps> = ({ memorial }) =>
           </div>
 
           <div className="border-t border-neutral-800 pt-3">
-            <h4 className="font-cinzel text-amber-300 font-bold text-sm tracking-wider uppercase mb-1.5 flex items-center gap-1.5">
+            <h4 className={`font-cinzel ${theme.accentText} font-bold text-sm tracking-wider uppercase mb-1.5 flex items-center gap-1.5`}>
               <Heart className="w-4 h-4 text-amber-400" />
               <span>
                 {memorial.biography?.faithTitle ||
@@ -109,7 +111,7 @@ export const ScreenBiography: React.FC<ScreenBiographyProps> = ({ memorial }) =>
 
         {/* Milestones Timeline */}
         <div className="space-y-3 pt-2">
-          <h4 className="font-cinzel text-amber-300 text-sm font-bold tracking-wider uppercase text-center">
+          <h4 className={`font-cinzel ${theme.accentText} text-sm font-bold tracking-wider uppercase text-center`}>
             {isEn ? 'Key Life Milestones' : 'Grandes Étapes de Vie'}
           </h4>
           <div className="space-y-2.5">
@@ -121,7 +123,7 @@ export const ScreenBiography: React.FC<ScreenBiographyProps> = ({ memorial }) =>
                 transition={{ delay: idx * 0.06 }}
                 className="bg-neutral-900/80 rounded-2xl p-3.5 border border-neutral-800 flex items-start gap-3"
               >
-                <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 font-cinzel font-bold text-xs shrink-0 mt-0.5">
+                <span className={`px-2.5 py-1 rounded-xl ${theme.badgeBg} font-cinzel font-bold text-xs shrink-0 mt-0.5`}>
                   {ms.year}
                 </span>
                 <div>
@@ -136,7 +138,44 @@ export const ScreenBiography: React.FC<ScreenBiographyProps> = ({ memorial }) =>
             ))}
           </div>
         </div>
+
+        {/* Family Contacts & Coordination Section */}
+        {memorial.familyContacts && memorial.familyContacts.length > 0 && (
+          <div className="space-y-3 pt-4 border-t border-neutral-800">
+            <div className="flex items-center justify-center gap-2">
+              <Users className="w-4 h-4 text-amber-400" />
+              <h4 className={`font-cinzel ${theme.accentText} text-sm font-bold tracking-wider uppercase`}>
+                {isEn ? 'Family Coordination & Contacts' : 'Coordination de la Famille & Contacts'}
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {memorial.familyContacts.map((contact, idx) => (
+                <div
+                  key={idx}
+                  className="p-3 bg-neutral-900/90 border border-neutral-800 rounded-2xl flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <h5 className="font-cinzel text-xs font-bold text-white truncate">
+                      {contact.name}
+                    </h5>
+                    <p className={`text-[11px] ${theme.accentLightText} truncate`}>{contact.role}</p>
+                    <p className="text-xs font-mono text-neutral-400 mt-0.5">{contact.phone}</p>
+                  </div>
+                  <a
+                    href={`tel:${contact.phone.replace(/\s+/g, '')}`}
+                    className={`p-2.5 rounded-xl ${theme.secondaryBtn} flex items-center justify-center shrink-0 cursor-pointer transition-all active:scale-95`}
+                    title={`Appeler ${contact.name}`}
+                  >
+                    <Phone className="w-4 h-4" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
+

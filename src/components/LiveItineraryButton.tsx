@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Navigation, MapPin, ExternalLink, Compass, Check } from 'lucide-react';
 import { getCurrentUserLocation, openGoogleMapsItinerary } from '../utils/geolocation';
+import { ThemeColor } from '../types';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface LiveItineraryButtonProps {
   venueName: string;
@@ -8,6 +10,8 @@ interface LiveItineraryButtonProps {
   destinationLat?: number;
   destinationLng?: number;
   className?: string;
+  themeColor?: ThemeColor;
+  language?: 'fr' | 'en';
 }
 
 export const LiveItineraryButton: React.FC<LiveItineraryButtonProps> = ({
@@ -16,17 +20,21 @@ export const LiveItineraryButton: React.FC<LiveItineraryButtonProps> = ({
   destinationLat = 7.3824,
   destinationLng = 3.8643,
   className = '',
+  themeColor,
+  language = 'fr',
 }) => {
+  const isEn = language === 'en';
+  const theme = getThemeStyles(themeColor);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const handleLaunchItinerary = async () => {
     setLoading(true);
-    setFeedback('Calcul de votre position GPS...');
+    setFeedback(isEn ? 'Locating your GPS coordinates...' : 'Calcul de votre position GPS...');
 
     try {
       const userLoc = await getCurrentUserLocation();
-      setFeedback('Ouverture de l’itinéraire Google Maps...');
+      setFeedback(isEn ? 'Opening Google Maps itinerary...' : 'Ouverture de l’itinéraire Google Maps...');
       setTimeout(() => {
         openGoogleMapsItinerary(
           destinationLat,
@@ -40,7 +48,7 @@ export const LiveItineraryButton: React.FC<LiveItineraryButtonProps> = ({
       }, 600);
     } catch (err: any) {
       console.warn('GPS inaccessible ou refusé, ouverture directe par adresse:', err);
-      setFeedback('Ouverture de la destination...');
+      setFeedback(isEn ? 'Opening destination on Maps...' : 'Ouverture de la destination...');
       setTimeout(() => {
         openGoogleMapsItinerary(
           destinationLat,
@@ -54,11 +62,11 @@ export const LiveItineraryButton: React.FC<LiveItineraryButtonProps> = ({
   };
 
   return (
-    <div className={`w-full bg-neutral-900/90 border border-amber-500/40 rounded-2xl p-3 shadow-md space-y-2 text-xs ${className}`}>
+    <div className={`w-full bg-neutral-900/90 border ${theme.borderColor} rounded-2xl p-3 shadow-md space-y-2 text-xs ${className}`}>
       <div className="flex items-start gap-2">
-        <MapPin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <MapPin className={`w-4 h-4 ${theme.accentText} shrink-0 mt-0.5`} />
         <div className="flex-1">
-          <p className="font-semibold text-amber-200">{venueName}</p>
+          <p className={`font-semibold ${theme.accentLightText}`}>{venueName}</p>
           <p className="text-[11px] text-neutral-400 leading-tight">{venueAddress}</p>
         </div>
       </div>
@@ -67,24 +75,26 @@ export const LiveItineraryButton: React.FC<LiveItineraryButtonProps> = ({
         type="button"
         onClick={handleLaunchItinerary}
         disabled={loading}
-        className="w-full py-2.5 px-3 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-400 text-neutral-950 font-bold rounded-xl flex items-center justify-center gap-2 shadow transition-all cursor-pointer text-xs"
+        className={`w-full py-2.5 px-3 bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold rounded-xl flex items-center justify-center gap-2 shadow transition-all cursor-pointer text-xs active:scale-95`}
       >
         {loading ? (
           <>
             <Compass className="w-3.5 h-3.5 animate-spin text-neutral-950" />
-            <span>{feedback || 'Recherche GPS...'}</span>
+            <span>{feedback || (isEn ? 'Searching GPS...' : 'Recherche GPS...')}</span>
           </>
         ) : (
           <>
             <Navigation className="w-3.5 h-3.5 fill-neutral-950" />
-            <span>Itinéraire depuis ma position GPS</span>
+            <span>{isEn ? 'Directions from my GPS location' : 'Itinéraire depuis ma position GPS'}</span>
             <ExternalLink className="w-3 h-3 opacity-80" />
           </>
         )}
       </button>
 
       <p className="text-[10px] text-center text-neutral-500">
-        Ouvre directement Google Maps pour vous guider jusqu'au lieu du culte
+        {isEn
+          ? 'Opens Google Maps directly to guide you to the service venue'
+          : 'Ouvre directement Google Maps pour vous guider jusqu’au lieu du culte'}
       </p>
     </div>
   );

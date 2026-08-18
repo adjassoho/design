@@ -21,6 +21,8 @@ import {
   getFedaPayConfig,
   PaymentInitiationRequest,
 } from '../utils/fedapay';
+import { ThemeColor } from '../types';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface FedaPayCheckoutModalProps {
   isOpen: boolean;
@@ -35,6 +37,8 @@ interface FedaPayCheckoutModalProps {
     paidAt: string;
     phone: string;
   }) => void;
+  themeColor?: ThemeColor;
+  language?: 'fr' | 'en';
 }
 
 type PaymentProvider = 'mtn' | 'moov' | 'wave' | 'orange' | 'card';
@@ -45,7 +49,11 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
   cardId,
   deceasedName,
   onPaymentSuccess,
+  themeColor,
+  language = 'fr',
 }) => {
+  const theme = getThemeStyles(themeColor);
+  const isEn = language === 'en';
   const [provider, setProvider] = useState<PaymentProvider>('mtn');
   const [phoneNumber, setPhoneNumber] = useState('97123456');
   const [countryCode, setCountryCode] = useState('BJ'); // Bénin (+229)
@@ -174,17 +182,17 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="bg-neutral-900 border-2 border-amber-500/50 rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4 text-xs font-sans text-neutral-200"
+        className={`bg-neutral-900 border-2 ${theme.borderColor} rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4 text-xs font-sans text-neutral-200`}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-              <Zap className="w-4 h-4 fill-amber-400" />
+            <div className={`w-8 h-8 rounded-xl ${theme.badgeBg} border ${theme.borderColor} flex items-center justify-center ${theme.accentText}`}>
+              <Zap className="w-4 h-4 fill-current" />
             </div>
             <div>
-              <h3 className="font-cinzel text-sm font-bold text-amber-200">
-                Paiement FedaPay • Publication
+              <h3 className={`font-cinzel text-sm font-bold ${theme.accentLightText}`}>
+                {isEn ? 'FedaPay Payment • Publication' : 'Paiement FedaPay • Publication'}
               </h3>
               <p className="text-[10px] text-neutral-400">
                 Mobile Money (MTN, Moov, Wave) & Carte Bancaire
@@ -211,24 +219,24 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
               className="space-y-4"
             >
               {/* Product Price & Summary Box */}
-              <div className="bg-neutral-950 border border-amber-500/30 rounded-2xl p-3.5 flex items-center justify-between">
+              <div className={`bg-neutral-950 border ${theme.borderColor} rounded-2xl p-3.5 flex items-center justify-between`}>
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
-                    Pack Faire-part d'Obsèques
+                  <span className={`text-[10px] uppercase font-bold ${theme.accentText} tracking-wider`}>
+                    {isEn ? 'Memorial Invitation Pack' : "Pack Faire-part d'Obsèques"}
                   </span>
                   <p className="text-xs text-white font-medium">
-                    Faire-part animé pour {deceasedName}
+                    {isEn ? 'Animated Memorial for ' : 'Faire-part animé pour '}{deceasedName}
                   </p>
                   <p className="text-[10px] text-neutral-400">
-                    150 liens nominatifs + Lien collectif WhatsApp + Itinéraire GPS
+                    {isEn ? '150 personalized links + WhatsApp collective link + GPS Route' : '150 liens nominatifs + Lien collectif WhatsApp + Itinéraire GPS'}
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold font-mono text-amber-300">
+                  <div className={`text-lg font-bold font-mono ${theme.accentLightText}`}>
                     500 FCFA
                   </div>
-                  <span className="text-[9px] px-1.5 py-0.5 bg-amber-950/80 border border-amber-500/40 rounded text-amber-300">
-                    Prix de lancement
+                  <span className={`text-[9px] px-1.5 py-0.5 ${theme.badgeBg} border ${theme.borderColor} rounded ${theme.accentLightText}`}>
+                    {isEn ? 'Launch price' : 'Prix de lancement'}
                   </span>
                 </div>
               </div>
@@ -236,7 +244,7 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
               {/* Provider Selection Tabs */}
               <div className="space-y-1.5">
                 <label className="block text-[11px] text-neutral-300 font-medium">
-                  Sélectionnez votre moyen de paiement
+                  {isEn ? 'Select your payment method' : 'Sélectionnez votre moyen de paiement'}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -244,7 +252,7 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
                     onClick={() => setProvider('mtn')}
                     className={`p-2 rounded-xl border flex flex-col items-center gap-1 transition-all ${
                       provider === 'mtn'
-                        ? 'border-amber-400 bg-amber-950/40 text-amber-200'
+                        ? `${theme.borderColor} ${theme.badgeBg} ${theme.accentLightText}`
                         : 'border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-neutral-700'
                     }`}
                   >
@@ -257,7 +265,7 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
                     onClick={() => setProvider('moov')}
                     className={`p-2 rounded-xl border flex flex-col items-center gap-1 transition-all ${
                       provider === 'moov'
-                        ? 'border-amber-400 bg-amber-950/40 text-amber-200'
+                        ? `${theme.borderColor} ${theme.badgeBg} ${theme.accentLightText}`
                         : 'border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-neutral-700'
                     }`}
                   >
@@ -270,7 +278,7 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
                     onClick={() => setProvider('wave')}
                     className={`p-2 rounded-xl border flex flex-col items-center gap-1 transition-all ${
                       provider === 'wave'
-                        ? 'border-amber-400 bg-amber-950/40 text-amber-200'
+                        ? `${theme.borderColor} ${theme.badgeBg} ${theme.accentLightText}`
                         : 'border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-neutral-700'
                     }`}
                   >
@@ -284,7 +292,7 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
               <div className="space-y-2">
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-neutral-300 mb-1 font-medium">Pays</label>
+                    <label className="block text-neutral-300 mb-1 font-medium">{isEn ? 'Country' : 'Pays'}</label>
                     <select
                       value={countryCode}
                       onChange={(e) => setCountryCode(e.target.value)}
@@ -299,7 +307,7 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
 
                   <div className="col-span-2">
                     <label className="block text-neutral-300 mb-1 font-medium">
-                      Numéro {provider === 'mtn' ? 'MTN' : provider === 'moov' ? 'Moov' : 'Mobile'}
+                      {isEn ? 'Number ' : 'Numéro '}{provider === 'mtn' ? 'MTN' : provider === 'moov' ? 'Moov' : 'Mobile'}
                     </label>
                     <div className="relative">
                       <Phone className="w-3.5 h-3.5 absolute left-3 top-3 text-neutral-400" />
@@ -317,7 +325,7 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
 
                 <div>
                   <label className="block text-neutral-300 mb-1 font-medium">
-                    Nom de l'organisateur / Contact
+                    {isEn ? "Organizer / Contact Name" : "Nom de l'organisateur / Contact"}
                   </label>
                   <input
                     type="text"
@@ -343,9 +351,9 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
               <button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full py-3 px-4 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 text-neutral-950 font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider font-cinzel"
+                className={`w-full py-3 px-4 bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider font-cinzel active:scale-95 transition-all`}
               >
-                <span>Payer 500 FCFA avec FedaPay</span>
+                <span>{isEn ? 'Pay 500 FCFA with FedaPay' : 'Payer 500 FCFA avec FedaPay'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </motion.form>

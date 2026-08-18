@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle2, XCircle, X, Flame, Heart, Send, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { GuestItem, RsvpSubmission } from '../types';
+import { GuestItem, RsvpSubmission, ThemeColor } from '../types';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface GuestRsvpModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface GuestRsvpModalProps {
   deceasedName: string;
   isCollective?: boolean;
   onSubmitRsvp: (submission: RsvpSubmission) => void;
+  themeColor?: ThemeColor;
 }
 
 export const GuestRsvpModal: React.FC<GuestRsvpModalProps> = ({
@@ -20,7 +22,9 @@ export const GuestRsvpModal: React.FC<GuestRsvpModalProps> = ({
   deceasedName,
   isCollective = false,
   onSubmitRsvp,
+  themeColor = 'imperial-gold',
 }) => {
+  const theme = getThemeStyles(themeColor);
   const [status, setStatus] = useState<'yes' | 'no'>('yes');
   const [name, setName] = useState(guest?.displayName || '');
   const [seats, setSeats] = useState(guest?.seats || 1);
@@ -68,14 +72,14 @@ export const GuestRsvpModal: React.FC<GuestRsvpModalProps> = ({
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="bg-neutral-900 border border-amber-500/40 rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4 text-xs font-sans text-neutral-200"
+        className={`bg-neutral-900 border ${theme.borderColor} rounded-3xl p-5 w-full max-w-md shadow-2xl space-y-4 text-xs font-sans text-neutral-200`}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
           <div className="flex items-center gap-2">
-            <Heart className="w-4 h-4 text-amber-400 fill-amber-400" />
+            <Heart className={`w-4 h-4 ${theme.accentText} fill-current`} />
             <div>
-              <h3 className="font-cinzel text-sm font-bold text-amber-200">
+              <h3 className={`font-cinzel text-sm font-bold ${theme.accentLightText}`}>
                 Réponse de Présence & Condoléances
               </h3>
               <p className="text-[10px] text-neutral-400">
@@ -171,17 +175,17 @@ export const GuestRsvpModal: React.FC<GuestRsvpModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setSeats(Math.max(1, seats - 1))}
-                    className="w-7 h-7 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-bold flex items-center justify-center"
+                    className="w-7 h-7 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-bold flex items-center justify-center cursor-pointer"
                   >
                     -
                   </button>
-                  <span className="w-6 text-center font-mono font-bold text-amber-300">
+                  <span className={`w-6 text-center font-mono font-bold ${theme.accentText}`}>
                     {seats}
                   </span>
                   <button
                     type="button"
                     onClick={() => setSeats(Math.min(guest?.seats || 5, seats + 1))}
-                    className="w-7 h-7 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-bold flex items-center justify-center"
+                    className="w-7 h-7 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-bold flex items-center justify-center cursor-pointer"
                   >
                     +
                   </button>
@@ -206,15 +210,15 @@ export const GuestRsvpModal: React.FC<GuestRsvpModalProps> = ({
             {/* Light Memorial Candle Toggle */}
             <div
               onClick={() => setCandleLit(!candleLit)}
-              className="bg-neutral-950/80 border border-amber-500/30 rounded-2xl p-2.5 flex items-center justify-between cursor-pointer hover:border-amber-500/50 transition-all"
+              className={`bg-neutral-950/80 border ${theme.borderColor} rounded-2xl p-2.5 flex items-center justify-between cursor-pointer hover:border-amber-500/50 transition-all`}
             >
               <div className="flex items-center gap-2">
                 <Flame
                   className={`w-4 h-4 ${
-                    candleLit ? 'text-amber-400 fill-amber-400 animate-pulse' : 'text-neutral-500'
+                    candleLit ? `${theme.accentText} fill-current animate-pulse` : 'text-neutral-500'
                   }`}
                 />
-                <span className="text-xs font-medium text-amber-200">
+                <span className={`text-xs font-medium ${theme.accentLightText}`}>
                   Allumer une bougie virtuelle en sa mémoire
                 </span>
               </div>
@@ -229,7 +233,7 @@ export const GuestRsvpModal: React.FC<GuestRsvpModalProps> = ({
             {/* Submit CTA */}
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 text-neutral-950 font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider font-cinzel"
+              className={`w-full py-3 px-4 bg-gradient-to-r ${theme.buttonGradient} text-neutral-950 font-bold rounded-2xl shadow-xl flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider font-cinzel`}
             >
               <Send className="w-3.5 h-3.5" />
               <span>Envoyer ma réponse à la famille</span>

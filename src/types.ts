@@ -3,6 +3,7 @@ export type ThemeColor = 'burgundy' | 'onyx' | 'royal-blue' | 'emerald' | 'imper
 export interface ServiceDetail {
   title: string;
   dateTime: string;
+  isoDateTime?: string;
   lyingInState?: string;
   serviceStartTime?: string;
   venueName: string;
@@ -211,4 +212,15 @@ export interface FuneralThemeTemplate {
   accentColor?: string;
   description?: string;
   previewBadge?: string;
+}
+
+export interface FuneralBackgroundTemplate {
+  id: string;
+  name: string;
+  nameEn: string;
+  url: string;
+  description: string;
+  descriptionEn: string;
+  tag: string;
+  tagEn: string;
 }

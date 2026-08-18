@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { HymnItem } from '../types';
+import { HymnItem, ThemeColor } from '../types';
 import { defaultHymns } from '../data/defaultMemorial';
 import { Music, Volume2, VolumeX, Plus, Minus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import { getThemeStyles } from '../utils/themeStyles';
 
 interface ScreenHymnsProps {
   initialHymnId?: string;
   isAudioPlaying?: boolean;
   onToggleAudio?: () => void;
   language?: 'fr' | 'en';
+  themeColor?: ThemeColor;
 }
 
 export const ScreenHymns: React.FC<ScreenHymnsProps> = ({
@@ -16,8 +18,10 @@ export const ScreenHymns: React.FC<ScreenHymnsProps> = ({
   isAudioPlaying,
   onToggleAudio,
   language = 'fr',
+  themeColor,
 }) => {
   const isEn = language === 'en';
+  const theme = getThemeStyles(themeColor);
   const [selectedHymn, setSelectedHymn] = useState<HymnItem>(
     defaultHymns.find((h) => initialHymnId && h.id === initialHymnId) || defaultHymns[0]
   );
@@ -59,13 +63,13 @@ export const ScreenHymns: React.FC<ScreenHymnsProps> = ({
   return (
     <div className="relative w-full flex-1 flex flex-col justify-between bg-neutral-950 text-neutral-100 p-4 font-sans-custom select-none pb-6">
       {/* Top Header */}
-      <div className="relative z-10 space-y-3 pb-3 border-b border-amber-500/20">
+      <div className={`relative z-10 space-y-3 pb-3 border-b ${theme.borderColor}`}>
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-cinzel tracking-[0.3em] text-amber-400 font-semibold uppercase">
+            <span className={`text-[10px] font-cinzel tracking-[0.3em] ${theme.accentText} font-semibold uppercase`}>
               {isEn ? 'Collection of Sacred Hymns' : 'Recueil des Cantiques d’Espérance'}
             </span>
-            <h2 className="font-cinzel text-xl sm:text-2xl font-bold text-amber-200 uppercase mt-0.5">
+            <h2 className={`font-cinzel text-xl sm:text-2xl font-bold ${theme.titleGradient} uppercase mt-0.5`}>
               {isEn ? 'Hymns & Prayers' : 'Cantiques du Culte'}
             </h2>
           </div>
@@ -77,12 +81,12 @@ export const ScreenHymns: React.FC<ScreenHymnsProps> = ({
                 onClick={onToggleAudio}
                 className={`p-2 rounded-xl border text-xs flex items-center gap-1 transition-all cursor-pointer ${
                   isAudioPlaying
-                    ? 'bg-amber-500/20 border-amber-400 text-amber-300'
+                    ? `${theme.badgeBg}`
                     : 'bg-neutral-900 border-neutral-800 text-neutral-400'
                 }`}
                 title={isAudioPlaying ? (isEn ? 'Mute Organ' : "Couper l'orgue") : (isEn ? 'Play Organ Requiem' : 'Jouer la mélodie céleste')}
               >
-                {isAudioPlaying ? <Volume2 className="w-4 h-4 text-amber-400" /> : <VolumeX className="w-4 h-4" />}
+                {isAudioPlaying ? <Volume2 className={`w-4 h-4 ${theme.accentText}`} /> : <VolumeX className="w-4 h-4" />}
               </button>
             )}
 
@@ -94,7 +98,7 @@ export const ScreenHymns: React.FC<ScreenHymnsProps> = ({
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
-              <span className="text-[10px] px-1 font-mono text-amber-300">Aa</span>
+              <span className={`text-[10px] px-1 font-mono ${theme.accentLightText}`}>Aa</span>
               <button
                 onClick={() => setFontSize(fontSize === 'normal' ? 'large' : 'xlarge')}
                 className="p-1 rounded-lg text-neutral-400 hover:text-white cursor-pointer"
@@ -126,7 +130,7 @@ export const ScreenHymns: React.FC<ScreenHymnsProps> = ({
               onClick={() => setSelectedHymn(hymn)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                 selectedHymn.id === hymn.id
-                  ? 'bg-amber-500 text-neutral-950 shadow-md font-bold'
+                  ? `${theme.buttonGradient} text-neutral-950 shadow-md font-bold`
                   : 'bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-neutral-200'
               }`}
             >
@@ -145,13 +149,13 @@ export const ScreenHymns: React.FC<ScreenHymnsProps> = ({
         className="relative z-10 flex-1 py-4 space-y-4"
       >
         {/* Hymn Title Card */}
-        <div className="text-center bg-gradient-to-b from-neutral-900 to-neutral-950 rounded-2xl p-4 border border-amber-500/30 shadow-lg">
-          <div className="flex items-center justify-between px-2 text-xs text-amber-400/90 mb-1">
+        <div className={`text-center bg-gradient-to-b ${theme.cardGradient} rounded-2xl p-4 border ${theme.borderColor} shadow-lg`}>
+          <div className={`flex items-center justify-between px-2 text-xs ${theme.accentText} mb-1`}>
             <button
               onClick={handlePrev}
               disabled={currentIndex === 0}
               className={`flex items-center gap-1 text-[11px] font-medium transition-all ${
-                currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-amber-200 cursor-pointer'
+                currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white cursor-pointer'
               }`}
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -166,7 +170,7 @@ export const ScreenHymns: React.FC<ScreenHymnsProps> = ({
               onClick={handleNext}
               disabled={currentIndex === defaultHymns.length - 1}
               className={`flex items-center gap-1 text-[11px] font-medium transition-all ${
-                currentIndex === defaultHymns.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-amber-200 cursor-pointer'
+                currentIndex === defaultHymns.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-white cursor-pointer'
               }`}
             >
               <span>{isEn ? 'Next' : 'Suivant'}</span>
@@ -174,11 +178,11 @@ export const ScreenHymns: React.FC<ScreenHymnsProps> = ({
             </button>
           </div>
 
-          <h3 className="font-cinzel text-lg sm:text-xl font-black text-amber-100 mt-1 uppercase">
+          <h3 className="font-cinzel text-lg sm:text-xl font-black text-white mt-1 uppercase">
             {selectedHymn.title}
           </h3>
           {selectedHymn.hymnAuthor && (
-            <p className="text-[11px] text-neutral-400 font-serif italic mt-0.5">
+            <p className={`text-[11px] ${theme.accentLightText} font-serif italic mt-0.5`}>
               {isEn ? 'Author / Composition: ' : 'Auteur / Composition : '} {selectedHymn.hymnAuthor}
             </p>
           )}
@@ -193,7 +197,7 @@ export const ScreenHymns: React.FC<ScreenHymnsProps> = ({
                 key={idx}
                 className={`leading-relaxed ${
                   isRefrain
-                    ? 'pl-4 border-l-2 border-amber-400/60 font-serif italic text-amber-200/95 my-3 bg-amber-950/20 py-2 rounded-r-xl pr-2'
+                    ? `pl-4 border-l-2 ${theme.borderColor} font-serif italic ${theme.accentLightText} my-3 bg-black/40 py-2 rounded-r-xl pr-2`
                     : 'text-neutral-100 font-serif'
                 } ${
                   fontSize === 'normal'
