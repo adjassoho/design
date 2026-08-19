@@ -72,13 +72,14 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({
     if (typeof window !== 'undefined') {
       return `${window.location.origin}${window.location.pathname}`;
     }
-    return 'https://convive.app';
+    return 'https://convive-obseques.app';
   };
 
   const handleCopyLink = (guestSlug: string, isCollective: boolean = false) => {
+    const idParam = memorial.id ? `id=${encodeURIComponent(memorial.id)}&` : '';
     const url = isCollective
-      ? `${getBaseUrl()}?collective=true`
-      : `${getBaseUrl()}?guest=${encodeURIComponent(guestSlug)}`;
+      ? `${getBaseUrl()}?${idParam}collective=true`
+      : `${getBaseUrl()}?${idParam}guest=${encodeURIComponent(guestSlug)}`;
 
     navigator.clipboard.writeText(url);
     setCopiedId(guestSlug);
@@ -87,9 +88,10 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({
 
   const handleSendWhatsApp = (guest: GuestItem) => {
     const isCollective = guest.linkKind === 'shared';
+    const idParam = memorial.id ? `id=${encodeURIComponent(memorial.id)}&` : '';
     const inviteUrl = isCollective
-      ? `${getBaseUrl()}?collective=true`
-      : `${getBaseUrl()}?guest=${encodeURIComponent(guest.slug)}`;
+      ? `${getBaseUrl()}?${idParam}collective=true`
+      : `${getBaseUrl()}?${idParam}guest=${encodeURIComponent(guest.slug)}`;
 
     const text = formatWhatsAppMessage(
       isCollective ? null : guest.displayName,

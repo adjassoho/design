@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getThemeStyles } from '../utils/themeStyles';
+import { InteractiveLocationPicker } from './InteractiveLocationPicker';
 
 interface ProgramCustomizerModalProps {
   isOpen: boolean;
@@ -461,7 +462,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleApply} className="flex-1 overflow-y-auto pr-1 space-y-4">
+        <div className="flex-1 overflow-y-auto pr-1 space-y-4">
           {/* TAB 1: IDENTITÉ & TITRES */}
           {activeTab === 'identity' && (
             <div className="space-y-3.5">
@@ -927,6 +928,37 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
                       className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs"
                     />
                   </div>
+                </div>
+
+                {/* Interactive Map & Draggable Pin Geolocation Selector */}
+                <div className="pt-2">
+                  <InteractiveLocationPicker
+                    latitude={formData.venueLat || formData.funeralService.latitude || 6.3654}
+                    longitude={formData.venueLng || formData.funeralService.longitude || 2.4183}
+                    venueName={formData.funeralService.venueName}
+                    venueAddress={formData.funeralService.address}
+                    language={formData.language || 'fr'}
+                    themeColor={formData.themeColor}
+                    onVenueNameChange={(name) => {
+                      updateFormData((prev) => ({
+                        ...prev,
+                        funeralService: { ...prev.funeralService, venueName: name },
+                      }));
+                    }}
+                    onLocationChange={(lat, lng, suggestedAddress) => {
+                      updateFormData((prev) => ({
+                        ...prev,
+                        venueLat: lat,
+                        venueLng: lng,
+                        funeralService: {
+                          ...prev.funeralService,
+                          latitude: lat,
+                          longitude: lng,
+                          address: suggestedAddress || prev.funeralService.address,
+                        },
+                      }));
+                    }}
+                  />
                 </div>
               </div>
 
@@ -1523,7 +1555,7 @@ export const ProgramCustomizerModal: React.FC<ProgramCustomizerModalProps> = ({
               </div>
             </div>
           )}
-        </form>
+        </div>
 
         {/* Modal Actions */}
         <div className="pt-3 border-t border-neutral-800 flex items-center justify-between shrink-0">

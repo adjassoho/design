@@ -27,8 +27,53 @@ interface StoredPortrait {
 }
 const portraitStore: Record<string, StoredPortrait> = {};
 
-// In-memory memorial profile store
-const memorialStore: Record<string, any> = {};
+// Persistent & in-memory memorial store with 30-day lifecycle
+interface MemorialRecord {
+  id: string;
+  memorial: any;
+  createdAt: string;
+  expiresAt: string;
+  daysValidity: number;
+  viewsCount: number;
+}
+
+const DATA_DIR = path.resolve(process.cwd(), "data");
+const MEMORIALS_FILE = path.join(DATA_DIR, "memorials.json");
+
+if (!fs.existsSync(DATA_DIR)) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch (e) {}
+}
+
+const memorialStore: Record<string, MemorialRecord> = {};
+
+// Load persisted records on boot
+try {
+  if (fs.existsSync(MEMORIALS_FILE)) {
+    const raw = fs.readFileSync(MEMORIALS_FILE, "utf-8");
+    const parsed = JSON.parse(raw);
+    Object.assign(memorialStore, parsed);
+  }
+} catch (err) {
+  console.warn("Could not load persisted memorials:", err);
+}
+
+function persistMemorials() {
+  try {
+    fs.writeFileSync(MEMORIALS_FILE, JSON.stringify(memorialStore, null, 2), "utf-8");
+  } catch (err) {
+    console.warn("Could not persist memorials to disk:", err);
+  }
+}
+
+// Helper to generate guaranteed collision-resistant unique ID for every user
+function generateUniqueMemorialId(): string {
+  const timestamp = Date.now().toString(36);
+  const entropy1 = Math.random().toString(36).substring(2, 8);
+  const entropy2 = Math.random().toString(36).substring(2, 6);
+  return `fp_${timestamp}_${entropy1}${entropy2}`;
+}
 
 // In-memory transaction registry for resilient state tracking
 const transactionStore: Record<
@@ -54,16 +99,23 @@ const transactionStore: Record<
 function renderDynamicHtmlMeta(template: string, req: express.Request): string {
   const query = req.query as Record<string, string>;
 
-  // Check if memorial ID is passed
+  // Check if unique memorial ID is passed
+  const memorialId = query.id || query.m || query.code;
   let fullName = query.name || "Peter Abiodun Oyenuga";
   let birthYear = query.birth || "1953";
   let passingYear = query.pass || query.passing || "2024";
   let photoUrl =
     query.photo ||
     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80";
+  let isExpired = false;
 
-  if (query.id && memorialStore[query.id]) {
-    const saved = memorialStore[query.id];
+  if (memorialId && memorialStore[memorialId]) {
+    const record = memorialStore[memorialId];
+    const expiresAtMs = new Date(record.expiresAt).getTime();
+    if (Date.now() > expiresAtMs) {
+      isExpired = true;
+    }
+    const saved = record.memorial || record;
     if (saved.fullName) fullName = saved.fullName;
     if (saved.birthYear) birthYear = saved.birthYear;
     if (saved.passingYear) passingYear = saved.passingYear;
@@ -81,8 +133,12 @@ function renderDynamicHtmlMeta(template: string, req: express.Request): string {
     absolutePhotoUrl = `${absoluteOrigin}${photoUrl}`;
   }
 
-  const pageTitle = `Faire-part • ${fullName}`;
-  const description = `À la mémoire pieuse de ${fullName} (${birthYear} - ${passingYear}). Faire-part officiel d'obsèques, programme du culte, hommages et recueillement.`;
+  const pageTitle = isExpired
+    ? `Faire-part archivé • ${fullName}`
+    : `Faire-part • ${fullName}`;
+  const description = isExpired
+    ? `La période de consultation de 30 jours pour le faire-part de ${fullName} est maintenant échue.`
+    : `À la mémoire pieuse de ${fullName} (${birthYear} - ${passingYear}). Faire-part officiel d'obsèques, programme du culte, hommages et recueillement.`;
   const canonicalUrl = `${absoluteOrigin}${req.originalUrl}`;
 
   const ogTags = `
@@ -211,27 +267,153 @@ async function startServer() {
     }
   });
 
-  // 3. Save or sync a full memorial profile to server store
+  // 3. Save or generate a unique memorial profile with 30-day validity
   app.post("/api/memorial/save", (req, res) => {
     try {
-      const memorial = req.body;
-      if (!memorial || !memorial.id) {
-        return res.status(400).json({ success: false, error: "Identifiant de faire-part manquant." });
+      const payload = req.body;
+      const memorial = payload.memorial || payload;
+      const forceNewId = Boolean(payload.forceNewId);
+
+      if (!memorial) {
+        return res.status(400).json({ success: false, error: "Contenu de faire-part manquant." });
       }
-      memorialStore[memorial.id] = memorial;
-      res.json({ success: true, id: memorial.id });
+
+      // Generate a unique ID if not provided, if default template, or if requested
+      let targetId = memorial.id;
+      if (forceNewId || !targetId || targetId === "peter-oyenuga-2024" || targetId === "default") {
+        targetId = generateUniqueMemorialId();
+      }
+
+      const now = Date.now();
+      const existing = memorialStore[targetId];
+
+      const createdAt = existing?.createdAt || new Date(now).toISOString();
+      // Exactly 30 days validity period
+      const expiresAt = existing?.expiresAt || new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const updatedMemorial = {
+        ...memorial,
+        id: targetId,
+        createdAt,
+        expiresAt,
+        isExpired: false,
+      };
+
+      const record: MemorialRecord = {
+        id: targetId,
+        memorial: updatedMemorial,
+        createdAt,
+        expiresAt,
+        daysValidity: 30,
+        viewsCount: existing ? existing.viewsCount : 0,
+      };
+
+      memorialStore[targetId] = record;
+      persistMemorials();
+
+      const forwardedProto = req.headers["x-forwarded-proto"] as string;
+      const protocol = forwardedProto || req.protocol || "https";
+      const host = (req.headers["x-forwarded-host"] as string) || req.headers.host || "localhost:3000";
+      const fullUrl = `${protocol}://${host}/?id=${targetId}`;
+
+      const msRemaining = new Date(expiresAt).getTime() - Date.now();
+      const daysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
+
+      res.json({
+        success: true,
+        id: targetId,
+        memorial: updatedMemorial,
+        createdAt,
+        expiresAt,
+        daysValidity: 30,
+        daysRemaining,
+        fullUrl,
+      });
     } catch (err: any) {
+      console.error("Erreur enregistrement faire-part:", err);
       res.status(500).json({ success: false, error: err.message });
     }
   });
 
-  // 4. Get a saved memorial profile by ID
+  // 4. Get a saved memorial profile by ID with 30-day validity verification
   app.get("/api/memorial/:id", (req, res) => {
-    const memorial = memorialStore[req.params.id];
-    if (!memorial) {
-      return res.status(404).json({ success: false, error: "Faire-part non trouvé." });
+    try {
+      const targetId = req.params.id;
+      let record = memorialStore[targetId];
+
+      // If not stored yet but is a standard or default ID, initialize gracefully
+      if (!record) {
+        const now = Date.now();
+        const createdAt = new Date(now).toISOString();
+        const expiresAt = new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        // Check if ID contains name clues (e.g. peter-abiodun-oyenuga-1953-2024)
+        let fullName = "Pa Peter Abiodun OYENUGA";
+        let birthYear = "1953";
+        let passingYear = "2024";
+
+        if (targetId.includes("oyenuga")) {
+          fullName = "Pa Peter Abiodun OYENUGA";
+        }
+
+        record = {
+          id: targetId,
+          memorial: {
+            id: targetId,
+            fullName,
+            birthYear,
+            passingYear,
+            age: 71,
+            language: "fr",
+            themeColor: "burgundy",
+            isPaid: false,
+            createdAt,
+            expiresAt,
+          },
+          createdAt,
+          expiresAt,
+          daysValidity: 30,
+          viewsCount: 1,
+        };
+        memorialStore[targetId] = record;
+        persistMemorials();
+      }
+
+      const now = Date.now();
+      const expiresAtMs = new Date(record.expiresAt).getTime();
+      const isExpired = now > expiresAtMs;
+
+      if (isExpired) {
+        return res.status(200).json({
+          success: false,
+          expired: true,
+          error: "Ce faire-part a expiré après sa période de validité de 30 jours.",
+          createdAt: record.createdAt,
+          expiresAt: record.expiresAt,
+          fullName: record.memorial?.fullName || "Défunt",
+        });
+      }
+
+      // Track view count
+      record.viewsCount = (record.viewsCount || 0) + 1;
+      persistMemorials();
+
+      const msRemaining = expiresAtMs - now;
+      const daysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
+
+      res.json({
+        success: true,
+        expired: false,
+        memorial: record.memorial,
+        createdAt: record.createdAt,
+        expiresAt: record.expiresAt,
+        daysRemaining,
+        viewsCount: record.viewsCount,
+      });
+    } catch (err: any) {
+      console.error("Erreur lecture faire-part:", err);
+      res.status(500).json({ success: false, error: err.message });
     }
-    res.json({ success: true, memorial });
   });
 
   // 5. Get FedaPay Public Configuration

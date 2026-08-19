@@ -29,6 +29,7 @@ import { FedaPayCheckoutModal } from './components/FedaPayCheckoutModal';
 import { GuestRsvpModal } from './components/GuestRsvpModal';
 import { ProgramCustomizerModal } from './components/ProgramCustomizerModal';
 import { PaymentReminderPopup } from './components/PaymentReminderPopup';
+import { ExpiredMemorialNotice } from './components/ExpiredMemorialNotice';
 import {
   toggleMemorialAudio,
   stopMemorialAudio,
@@ -101,6 +102,14 @@ export default function App() {
   const [hasBrokenSeal, setHasBrokenSeal] = useState(true); // default true for organizer preview
   const [isGuestMode, setIsGuestMode] = useState(false);
 
+  // 30-day validity & expiration states
+  const [isExpired, setIsExpired] = useState(false);
+  const [expiredInfo, setExpiredInfo] = useState<{
+    fullName?: string;
+    createdAt?: string;
+    expiresAt?: string;
+  }>({});
+
   // Dynamically update Favicon with uploaded photo and Page title to Faire-part
   useEffect(() => {
     updateDynamicFaviconAndMeta(
@@ -135,23 +144,40 @@ export default function App() {
     }
   }, [photos]);
 
-  // Optional FedaPay status check without intrusive popup timers
-  useEffect(() => {
-    // Intrusive popup timers disabled per user request
-  }, []);
-
-  // Check URL parameters on mount
+  // Check URL parameters and load unique memorial profile on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const guestSlug = searchParams.get('guest');
       const collectiveParam = searchParams.get('collective');
       const statusParam = searchParams.get('status');
-      const txIdParam = searchParams.get('id') || searchParams.get('transaction_id');
+      const txIdParam = searchParams.get('transaction_id');
+      const uniqueId = searchParams.get('id') || searchParams.get('m') || searchParams.get('code');
       const langParam = searchParams.get('lang');
 
       if (langParam === 'en' || langParam === 'fr') {
         setMemorial((prev) => ({ ...prev, language: langParam as 'fr' | 'en' }));
+      }
+
+      // Fetch unique memorial if unique ID is present in URL
+      if (uniqueId && !uniqueId.startsWith('tx_') && uniqueId !== 'approved') {
+        fetch(`/api/memorial/${encodeURIComponent(uniqueId)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.expired) {
+              setIsExpired(true);
+              setExpiredInfo({
+                fullName: data.fullName,
+                createdAt: data.createdAt,
+                expiresAt: data.expiresAt,
+              });
+            } else if (data.success && data.memorial) {
+              setMemorial(data.memorial);
+            }
+          })
+          .catch((err) => {
+            console.warn('Could not fetch server memorial profile:', err);
+          });
       }
 
       // 1. Detect if returning from approved FedaPay transaction
@@ -178,7 +204,9 @@ export default function App() {
         } catch (e) {}
       }
 
-      // 2. Detect Guest Personal or General link
+      // 2. Detect Guest Personal or General link or Shared link
+      const isOrganizerParam = searchParams.get('mode') === 'organizer' || searchParams.get('organizer') === 'true';
+
       if (guestSlug) {
         const found = defaultGuests.find((g) => g.slug === guestSlug) || {
           id: `guest-custom-${Date.now()}`,
@@ -197,7 +225,7 @@ export default function App() {
         setGuests((prev) =>
           prev.map((g) => (g.slug === guestSlug ? { ...g, openCount: g.openCount + 1 } : g))
         );
-      } else if (collectiveParam === 'true') {
+      } else if (collectiveParam === 'true' || (uniqueId && !isOrganizerParam)) {
         setIsCollectiveGuest(true);
         setIsGuestMode(true);
         setHasBrokenSeal(false);
@@ -228,7 +256,18 @@ export default function App() {
       }
     }
 
+    // Stop audio on tab switch or page exit & sync state
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        stopMemorialAudio();
+        setIsAudioPlaying(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pagehide', () => stopMemorialAudio());
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
       stopMemorialAudio();
     };
   }, []);
@@ -388,6 +427,23 @@ export default function App() {
     setCurrentTab(tab);
   };
 
+  if (isExpired) {
+    return (
+      <ExpiredMemorialNotice
+        fullName={expiredInfo.fullName || memorial.fullName}
+        createdAt={expiredInfo.createdAt}
+        expiresAt={expiredInfo.expiresAt}
+        themeColor={memorial.themeColor}
+        language={memorial.language || 'fr'}
+        onHomeClick={() => {
+          if (typeof window !== 'undefined') {
+            window.location.href = window.location.origin + window.location.pathname;
+          }
+        }}
+      />
+    );
+  }
+
   return (
     <PhoneContainer
       themeColor={memorial.themeColor}
@@ -493,6 +549,7 @@ export default function App() {
             <ScreenShare
               memorial={memorial}
               onOpenPayment={() => setIsPaymentModalOpen(true)}
+              onUpdateMemorial={(updated) => setMemorial(updated)}
             />
           )}
 
@@ -545,7 +602,14 @@ export default function App() {
         isOpen={isCustomizerOpen}
         onClose={() => setIsCustomizerOpen(false)}
         memorial={memorial}
-        onSave={(updated) => setMemorial(updated)}
+        onSave={(updated) => {
+          setMemorial(updated);
+          fetch('/api/memorial/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memorial: updated, forceNewId: false }),
+          }).catch((err) => console.warn('Background sync error:', err));
+        }}
         onReset={() => setMemorial(defaultMemorial)}
       />
     </PhoneContainer>

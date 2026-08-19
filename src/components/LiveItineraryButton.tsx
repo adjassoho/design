@@ -71,6 +71,7 @@ export const LiveItineraryButton: React.FC<LiveItineraryButtonProps> = ({
         </div>
       </div>
 
+      {/* Main One-Tap GPS Route */}
       <button
         type="button"
         onClick={handleLaunchItinerary}
@@ -85,16 +86,38 @@ export const LiveItineraryButton: React.FC<LiveItineraryButtonProps> = ({
         ) : (
           <>
             <Navigation className="w-3.5 h-3.5 fill-neutral-950" />
-            <span>{isEn ? 'Directions from my GPS location' : 'Itinéraire depuis ma position GPS'}</span>
+            <span>{isEn ? 'Directions from my GPS position' : 'Itinéraire direct vers le culte'}</span>
             <ExternalLink className="w-3 h-3 opacity-80" />
           </>
         )}
       </button>
 
+      {/* Alternative Navigation Apps */}
+      <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+        <a
+          href={`https://waze.com/ul?ll=${destinationLat},${destinationLng}&navigate=yes`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="py-1 px-2 bg-neutral-950 hover:bg-neutral-800 text-neutral-300 rounded-lg text-[10px] flex items-center justify-center gap-1 border border-neutral-800 transition-colors"
+        >
+          <Navigation className="w-2.5 h-2.5 text-sky-400" />
+          <span>Waze GPS</span>
+        </a>
+        <a
+          href={`https://maps.apple.com/?daddr=${destinationLat},${destinationLng}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="py-1 px-2 bg-neutral-950 hover:bg-neutral-800 text-neutral-300 rounded-lg text-[10px] flex items-center justify-center gap-1 border border-neutral-800 transition-colors"
+        >
+          <Navigation className="w-2.5 h-2.5 text-neutral-200" />
+          <span>Apple Maps</span>
+        </a>
+      </div>
+
       <p className="text-[10px] text-center text-neutral-500">
         {isEn
-          ? 'Opens Google Maps directly to guide you to the service venue'
-          : 'Ouvre directement Google Maps pour vous guider jusqu’au lieu du culte'}
+          ? 'Guides you with live voice navigation directly to the church gate'
+          : 'Guidage GPS vocal en direct jusqu’au portail de l’église'}
       </p>
     </div>
   );

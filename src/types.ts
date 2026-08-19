@@ -90,6 +90,10 @@ export interface FuneralProfile {
     customerName?: string;
     customerPhone?: string;
   };
+  // 30-day Validity and Creation lifecycle tracking
+  createdAt?: string;
+  expiresAt?: string;
+  isExpired?: boolean;
 }
 
 // Alias for compatibility

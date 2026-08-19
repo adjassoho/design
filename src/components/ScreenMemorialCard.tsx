@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { FuneralProfile } from '../types';
-import { waxSealDefault } from '../data/defaultMemorial';
 import { ChevronLeft, Share2, RotateCw, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getThemeStyles } from '../utils/themeStyles';
+import { DynamicWaxSeal } from './DynamicWaxSeal';
 
 interface ScreenMemorialCardProps {
   memorial: FuneralProfile;
@@ -132,25 +132,15 @@ export const ScreenMemorialCard: React.FC<ScreenMemorialCardProps> = ({
               </div>
 
               {/* Gold Wax Seal Badge */}
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 my-1 drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
-                <img
-                  src={waxSealDefault}
-                  alt={memorial.sealLabel}
-                  className="w-full h-full object-contain"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-1">
-                  <span className="text-[6px] tracking-wider text-amber-950 font-bold font-montserrat uppercase">
-                    {isEn ? 'AGED' : 'ÂGÉ DE'}
-                  </span>
-                  <span className="text-base sm:text-xl font-cinzel font-black text-amber-950 leading-none">
-                    {memorial.age}
-                  </span>
-                  <span className="text-[6px] tracking-wider text-amber-950 font-bold font-montserrat uppercase">
-                    {isEn ? 'YEARS' : 'ANS'}
-                  </span>
-                </div>
-              </div>
+              <DynamicWaxSeal
+                age={memorial.age}
+                label={memorial.sealLabel}
+                language={memorial.language || 'fr'}
+                themeColor={memorial.themeColor}
+                size="sm"
+                showBadge={false}
+                className="my-1 drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
+              />
 
               {/* OBSEQUIES Section */}
               <div className={`w-full space-y-2 text-center pt-1 border-t ${theme.borderColor}`}>

@@ -191,9 +191,20 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
               <Zap className="w-4 h-4 fill-current" />
             </div>
             <div>
-              <h3 className={`font-cinzel text-sm font-bold ${theme.accentLightText}`}>
-                {isEn ? 'FedaPay Payment • Publication' : 'Paiement FedaPay • Publication'}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className={`font-cinzel text-sm font-bold ${theme.accentLightText}`}>
+                  {isEn ? 'FedaPay Payment • Publication' : 'Paiement FedaPay • Publication'}
+                </h3>
+                {fedapayConfig?.hasSecretKey ? (
+                  <span className="text-[9px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full font-medium">
+                    Live
+                  </span>
+                ) : (
+                  <span className="text-[9px] px-1.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full font-medium">
+                    Sandbox / Test
+                  </span>
+                )}
+              </div>
               <p className="text-[10px] text-neutral-400">
                 Mobile Money (MTN, Moov, Wave) & Carte Bancaire
               </p>
@@ -377,10 +388,40 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
                   Validation sur votre téléphone
                 </h4>
                 <p className="text-xs text-neutral-300 max-w-xs">{statusMessage}</p>
-                <p className="text-[10px] text-neutral-500">
+                <p className="text-[10px] text-neutral-400">
                   Entrez votre code secret Mobile Money sur votre écran pour autoriser le débit de 500 FCFA.
                 </p>
               </div>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  setStatusMessage('Validation du débit Mobile Money...');
+                  const verifyRes = await verifyFedaPayTransaction(transactionRef || `tx_${Date.now()}`, true);
+                  if (verifyRes.success && verifyRes.status === 'approved') {
+                    setStep('success');
+                    setIsProcessing(false);
+                    triggerConfetti();
+
+                    const paymentData = {
+                      transactionId: transactionRef || `FEDAPAY-${Date.now()}`,
+                      reference: transactionRef || `FEDAPAY-${Date.now()}`,
+                      amount: 500,
+                      method: `${provider.toUpperCase()} Mobile Money (${countryCode})`,
+                      paidAt: new Date().toISOString(),
+                      phone: `${getCountryPrefix(countryCode)} ${phoneNumber}`,
+                    };
+
+                    setTimeout(() => {
+                      onPaymentSuccess(paymentData);
+                    }, 1800);
+                  }
+                }}
+                className={`py-2 px-4 bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 rounded-xl text-xs font-medium cursor-pointer transition-all active:scale-95 flex items-center gap-2`}
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>J'ai confirmé sur mon téléphone</span>
+              </button>
 
               <div className="px-3 py-1.5 bg-neutral-950 border border-neutral-800 rounded-xl text-[10px] font-mono text-neutral-400">
                 Réf: {transactionRef || 'FEDAPAY-PENDING'}
@@ -405,7 +446,7 @@ export const FedaPayCheckoutModal: React.FC<FedaPayCheckoutModalProps> = ({
                   Paiement Confirmé avec Succès !
                 </h4>
                 <p className="text-xs text-neutral-300">
-                  Votre faire-part d'obsèques est officiellement publié et actif pour 60 jours.
+                  Votre faire-part d'obsèques est officiellement publié et actif pour 30 jours.
                 </p>
               </div>
 

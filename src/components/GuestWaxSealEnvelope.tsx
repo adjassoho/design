@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, ArrowRight } from 'lucide-react';
-import { waxSealDefault } from '../data/defaultMemorial';
 import { ThemeColor } from '../types';
 import { getThemeStyles } from '../utils/themeStyles';
+import { DynamicWaxSeal } from './DynamicWaxSeal';
 
 interface GuestWaxSealEnvelopeProps {
   guestName?: string | null;
@@ -118,16 +118,15 @@ export const GuestWaxSealEnvelope: React.FC<GuestWaxSealEnvelopeProps> = ({
             onClick={handleBreakSeal}
             className="relative cursor-pointer group flex flex-col items-center"
           >
-            <div className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 ${theme.borderColor} p-1 shadow-2xl bg-radial from-amber-600 via-amber-800 to-amber-950 flex items-center justify-center transition-transform duration-300 group-hover:scale-105`}>
-              <img
-                src={waxSealDefault}
-                alt="Sceau d'Obsèques"
-                className="w-full h-full rounded-full object-cover shadow-inner"
-              />
-            </div>
-            <span className={`absolute -bottom-2 px-2.5 py-0.5 bg-neutral-900 border ${theme.borderColor} rounded-full text-[9px] font-cinzel ${theme.accentText} uppercase tracking-widest font-bold shadow-md`}>
-              {displaySealText}
-            </span>
+            <DynamicWaxSeal
+              age={age}
+              label={displaySealText}
+              language={language}
+              themeColor={themeColor}
+              size="md"
+              showBadge={true}
+              className="group-hover:scale-105 transition-transform duration-300"
+            />
           </motion.div>
         </div>
 
